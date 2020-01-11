@@ -1,0 +1,2 @@
+hi#bye@hello-goodnight = 5;
+print(hi#bye@hello-goodnight);

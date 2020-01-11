@@ -1,0 +1,443 @@
+var pthis;
+var tthis;
+
+class CStream {
+  constructor(input) {
+    this.input = input;
+    this.pos = 0;
+    this.line = 1;
+    this.col = 0;
+  }
+
+  next() {
+    var ch = this.input.charAt(this.pos++);
+    if (ch == "\n") this.line++, this.col = 0; else this.col++;
+    // console.log(ch);
+    return ch;
+  }
+
+  peek() {
+      return this.input.charAt(this.pos);
+  }
+
+  eof() {
+      return this.peek() == "";
+  }
+
+  exeunt(msg) {
+      throw new Error("SYNTAX ERROR\n" + msg + " (" + this.line + ":" + this.col + ")");
+  }
+}
+
+class TStream {
+  constructor(input) {
+    this.input = input;
+    this.current = null;
+    this.kw = " if then else function f true false local RAW "
+    tthis = this;
+  }
+
+  readNext() {
+    tthis.readWhilst(tthis.whitespace);
+    if(tthis.input.eof()) return null;
+    var ch = tthis.input.peek();
+    if (ch == "/" && tthis.input.next() == "/") {
+      tthis.skip();
+      return tthis.readNext();
+    }
+    if(ch == '"') return tthis.readStr();
+    if(tthis.digit(ch)) return tthis.readNum();
+    if(tthis.pIdent(ch)) return tthis.readIdent();
+    if(tthis.punctuation(ch)) return {
+      type: "punctuation",
+      value: tthis.input.next()
+    };
+    if(tthis.op(ch)) return {
+      type: "operator",
+      value: tthis.readWhilst(tthis.op)
+    };
+    tthis.input.exeunt("Unexpected character: " + ch);
+  }
+
+  keyw(x) {
+    return tthis.kw.indexOf(" " + x + " ") >= 0;
+  }
+
+  digit(c) {
+    return /[0-9]/i.test(c);
+  }
+
+  pIdent(c) {
+    return /[_a-z]/i.test(c);
+  }
+
+  ident(c) {
+    return /[_a-z0-9-<>=~#@]/i.test(c);
+  }
+
+  op(c) {
+    return "+-*/%=&|<>!".indexOf(c) >= 0;
+  }
+
+  punctuation(c) {
+     return ",;(){}[]".indexOf(c) >= 0;
+  }
+
+  whitespace(c) {
+    return " \t\n\r".indexOf(c) >= 0;
+  }
+
+  readWhilst(predicate) {
+    var s = "";
+    while (!tthis.input.eof() && predicate(tthis.input.peek())) s += tthis.input.next();
+    return s;
+  }
+
+  readNum() {
+    var dPoint= false;
+    var num = tthis.readWhilst(function(ch) {
+      if(ch == ".") {
+        if (dPoint) return false;
+        dPoint = true;
+        return true;
+      }
+      return tthis.digit(ch);
+    });
+    return {
+      type: "numerical",
+      value: parseFloat(num)
+    };
+  }
+
+  readIdent() {
+    var id = tthis.readWhilst(tthis.ident);
+    return {
+        type: tthis.keyw(id) ? "keyword" : "variable",
+        value: id
+    };
+  }
+
+  readSKP(end) {
+    var SKPd = false;
+    var s = "";
+    tthis.input.next();
+    while(!tthis.input.eof()) {
+      var ch = tthis.input.next();
+      if (SKPd) {
+        s += ch;
+        SKPd = false;
+      } else if (ch == "\\") {
+        SKPd = true;
+      } else if (ch == end) {
+        break;
+      } else {
+        s += ch;
+      }
+    }
+    return s;
+  }
+
+  readStr() {
+    return {
+      type: "string",
+      value: tthis.readSKP('"')
+    };
+  }
+
+  skip() {
+    tthis.readWhilst(function(ch){
+      return ch != "\n";
+    });
+    tthis.input.next();
+  }
+
+  peek() {
+    return tthis.current || (tthis.current = tthis.readNext());
+  }
+
+  next() {
+    var t = tthis.current;
+    tthis.current = null;
+    return t || tthis.readNext();
+  }
+
+  eof() {
+    return tthis.peek() == null;
+  }
+
+  exeunt(msg) {
+      tthis.input.exeunt(msg);
+  }
+}
+
+class Parser {
+  constructor(input) {
+    this.input = input;
+    this.False = { type: "boolean", value: false };
+    this.Precedence = {
+      "=": 1,
+      "||": 2,
+      "&&": 3,
+      "<": 7, ">": 7, "<=": 7, ">=": 7, "==": 7, "!=": 7,
+      "+": 10, "-": 10,
+      "*": 20, "/": 20, "%": 20
+    };
+    pthis = this;
+  }
+
+  parseKern() {
+    var block = [];
+    while(!pthis.input.eof()) {
+      block.push(pthis.parseExpression());
+      if(!pthis.input.eof()) pthis.skipPunctuation(";");
+    }
+    return {
+      type: "block",
+      block: block
+    };
+  }
+
+  delimited(start, stop, separator, parser) {
+    var a = [];
+    var first = true;
+    pthis.skipPunctuation(start);
+    while(!pthis.input.eof()) {
+      if (pthis.punctuation(stop)) break;
+      if (first) first = false; else pthis.skipPunctuation(separator);
+      if (pthis.punctuation(stop)) break;
+      a.push(parser());
+    }
+    pthis.skipPunctuation(stop);
+    return a;
+  }
+
+  parseBlock() {
+    var block = pthis.delimited("{", "}", ";", pthis.parseExpression);
+    if(block.length == 0) return pthis.False;
+    if(block.length == 1) return block[0];
+    return {
+      type: "block",
+      block: block
+    };
+  }
+
+  parseAtom() {
+    return pthis.expectCall(function(){
+      if(pthis.punctuation("(")) {
+        pthis.input.next();
+        var exp = pthis.parseExpression();
+        pthis.skipPunctuation(")");
+        return exp;
+      }
+      if(pthis.op("!")) {
+        pthis.input.next();
+        return {
+          type: "negate",
+          body: pthis.parseExpression()
+        };
+      }
+      if(pthis.punctuation("[")) return pthis.parseArray();
+      if(pthis.punctuation("{")) return pthis.parseBlock();
+      if(pthis.keyword("if")) return pthis.parseIf();
+      if(pthis.keyword("true") || pthis.keyword("false")) return pthis.parseBoolean();
+      if(pthis.keyword("local")) return pthis.parseLocal();
+      if(pthis.keyword("function") || pthis.keyword("f")) {
+        pthis.input.next();
+        return pthis.parseFunction();
+      }
+      if(pthis.keyword("RAW")) return pthis.parseRAW();
+      var t = pthis.input.next();
+      if(t.type == "variable" || t.type == "numerical" || t.type == "string") return t;
+      pthis.unexpected();
+    });
+  }
+
+  parseExpression() {
+    return pthis.expectCall(function(){
+      return pthis.expectBin(pthis.parseAtom(), 0);
+    });
+  }
+
+  expectCall(expr) {
+    expr = expr();
+    return pthis.punctuation("(") ? pthis.parseCall(expr) : pthis.punctuation("[") ? pthis.parseIndex(expr) : expr;
+  }
+
+  parseCall(method) {
+    return {
+      type: "call",
+      method: method,
+      args: pthis.delimited("(", ")", ",", pthis.parseExpression)
+    };
+  }
+
+  parseIndex(list) {
+    var dx;
+    pthis.skipPunctuation("[");
+    dx = pthis.parseExpression();
+    pthis.skipPunctuation("]");
+    return {
+      type: "index",
+      list: list,
+      index: dx
+    };
+  }
+
+  parseArray() {
+    return {
+      type: "array",
+      value: pthis.delimited("[", "]", ",", pthis.parseExpression)
+    };
+  }
+
+  expectBin(left, prec) {
+    var t = pthis.op();
+    if(t) {
+      var oPrec = pthis.Precedence[t.value];
+      if(oPrec > prec) {
+        pthis.input.next();
+        var right = pthis.expectBin(pthis.parseAtom(), oPrec);
+        var binary = {
+          type: t.value == "=" ? "assign" : "binary",
+          operator: t.value,
+          left: left,
+          right: right
+        };
+        return pthis.expectBin(binary, prec);
+      }
+    }
+    return left;
+  }
+
+  punctuation(c) {
+    var t = pthis.input.peek();
+    return t && t.type == "punctuation" && (!c || t.value == c) && t;
+  }
+
+  keyword(c) {
+    var t = pthis.input.peek();
+    return t && t.type == "keyword" && (!c || t.value == c) && t;
+  }
+
+  op(c) {
+    var t = pthis.input.peek();
+    return t && t.type == "operator" && (!c || t.value == c) && t;
+  }
+
+  skipPunctuation(c) {
+    if(pthis.punctuation(c)) pthis.input.next();
+    else pthis.input.exeunt("Expected punctuation: " + c);
+  }
+
+  skipKeyword(c) {
+    if(pthis.keyword(c)) pthis.input.next();
+    else pthis.input.exeunt("Expected keyword: " + c);
+  }
+
+  resKeyword(c) {
+    var x = false;
+    for(var i = 0; i <= c.length; i++) {
+      if(pthis.keyword(c[i])) {
+        x = true;
+        break;
+      }
+    }
+    if(x) pthis.input.next();
+    else pthis.input.exeunt("Expected a keyword from: " + c.toString());
+  }
+
+  skipOp(c) {
+    if(pthis.op(c)) pthis.input.next();
+    else pthis.input.exeunt("Expected operator: " + c);
+  }
+
+  unexpected() {
+    pthis.input.exeunt("Unexpected token: " + JSON.stringify(pthis.input.peek()));
+  }
+
+  parseVarnym() {
+    var name = pthis.input.next();
+    if(name.type != "variable") pthis.input.exeunt("Expected variable name");
+    return name.value;
+  }
+
+  parseIf() {
+    pthis.skipKeyword("if");
+    var cond = pthis.parseExpression();
+    if(!pthis.punctuation("{")) pthis.skipKeyword("then");
+    var then = pthis.parseExpression();
+    var retina = {
+      type: "if",
+      cond: cond,
+      then: then
+    };
+    if(pthis.keyword("else")) {
+      pthis.input.next();
+      retina.else = pthis.parseExpression();
+    }
+    return retina;
+  }
+
+  parseFunction() {
+    return {
+      type: "function",
+      name: pthis.input.peek().type == "variable" ? pthis.input.next().value : null,
+      vars: pthis.delimited("(", ")", ",", pthis.parseVarnym),
+      body: pthis.parseExpression()
+    };
+  }
+
+  parseVardef() {
+    var name = pthis.parseVarnym(), def;
+    if(pthis.op("=")) {
+      pthis.input.next();
+      def = pthis.parseExpression();
+    }
+    return { name: name, def: def };
+  }
+
+  parseLocal() {
+    pthis.skipKeyword("local");
+    if(pthis.input.peek().type == "variable") {
+      var name = pthis.input.next().value;
+      var defs = pthis.delimited("(", ")", ",", pthis.parseVardef);
+      return {
+        type: "call",
+        method: {
+          type: "function",
+          name: name,
+          vars: defs.map(function(def){ return def.name }),
+          body: pthis.parseExpression()
+        },
+        args: defs.map(function(def){ return def.def || pthis.False })
+      };
+    }
+    return {
+      type: "local",
+      vars: pthis.delimited("(", ")", ",", pthis.parseVardef),
+      body: pthis.parseExpression()
+    };
+  }
+
+  parseBoolean() {
+    return {
+      type: "boolean",
+      value: pthis.input.next().value == "true"
+    };
+  }
+
+  parseRAW() {
+    pthis.skipKeyword("RAW");
+    if (pthis.input.peek().type != "string") pthis.input.exeunt("RAW only accepts raw strings as input");
+    return {
+      type: "raw",
+      code: pthis.input.next().value
+    };
+  }
+}
+
+module.exports = {
+  CStream: CStream,
+  TStream: TStream,
+  Parser: Parser
+}

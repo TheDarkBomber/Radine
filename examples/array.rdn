@@ -1,0 +1,30 @@
+forEach = f(list, m) {
+  local (n = length(list)) {
+    local loop(i = 0) {
+      if i < n then {
+        m(list[i], i);
+        loop(i + 1);
+      };
+    };
+  };
+};
+
+pop = f(arr) {
+  n = [];
+  len = (length(arr) - 1);
+  forEach(arr, f(e, i) {
+    if len != i then push(e, n);
+  });
+  (n);
+};
+
+last = f(arr) {
+  x = false;
+  len = (length(arr) - 1);
+  forEach(arr, f(e, i) {
+    if len == i then x = e;
+  });
+  (x);
+};
+
+test = ["foo", "bar", "baz"];
