@@ -287,7 +287,7 @@ var optC = optimiseAST(CPS)
 console.log("Transpiling to JS");
 var newc = makeJS(optC);
 newc = "Execute(" + newc + ", [function(r){}]);";
-newc = require('./jsf.js').predefine('./primitives.js', newc);
+newc = require('./jsf.js').predefine('./primitives-minified.js', newc);
 require('fs').writeFileSync("./out.js", newc);
 
 console.log("Compiling JS via Nexe");
