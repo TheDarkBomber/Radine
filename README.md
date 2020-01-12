@@ -47,7 +47,7 @@ If! Everybody loves If! I don't need to explain much here but the syntax, which 
 
 ### Local
 
-Alright, a local is hard to explain. The name gives it a hint, however. "Local". It's easier to explain if I show the syntax: `local [name] ([assignment1], [assignment2], [...]) <expression>`. Notice it takes assignment expressions (e.g. `i = 0`), and not standard arguments. Essentially, loccals are expressions that have local variables that will **not** overshadow other variables. E.g.
+Alright, a local is hard to explain. The name gives it a hint, however. "Local". It's easier to explain if I show the syntax: `local [name] ([assignment1], [assignment2], [...]) <expression>`. Notice it takes assignment expressions (e.g. `i = 0`), and not standard arguments. Essentially, locals are expressions that have local variables that will **not** overshadow other variables. E.g.
 
 ```
 local (n = "hi) {
