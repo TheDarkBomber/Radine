@@ -4,6 +4,7 @@ const toCPS = require('./jsf.js').toCPS;
 const optimiseAST = require('./jsf.js').optimiseAST;
 
 const { compile } = require('nexe');
+const invocation = require('path').resolve('.') + "\\";
 
 // var ithis;
 
@@ -223,15 +224,19 @@ var yargs = require('yargs').options({
     describe: 'Name of output executable. Do not include the extension nor filepath.',
     type: 'string'
   }, 'icon': {
-    default: './radine.ico',
+    default: __dirname + "\\" + 'radine.ico',
     describe: 'Icon to apply to file if possible.',
     type: 'string'
   }
 }).help().argv;
 
-if(!yargs.output) yargs.output = yargs.input;
+if(!yargs.output) yargs.output = yargs.input.split("/")[-1];
 
-var input = "./out.js";
+var input = invocation + "out.js";
+if (yargs.input.startsWith("./")) {
+  let a = yargs.input.substring(2);
+  yargs.input = invocation + a;
+}
 var data = require('fs').readFileSync(yargs.input + ".rdn").toString();
 //console.log(y);
 // var Evaluation = new Interpreter(y);
@@ -287,7 +292,7 @@ var optC = optimiseAST(CPS)
 console.log("Transpiling to JS");
 var newc = makeJS(optC);
 newc = "Execute(" + newc + ", [function(r){}]);";
-newc = require('./jsf.js').predefine('./primitives-minified.js', newc);
+newc = require('./jsf.js').predefine(__dirname + "\\" + 'primitives-minified.js', newc);
 require('fs').writeFileSync("./out.js", newc);
 
 console.log("Compiling JS via Nexe");
