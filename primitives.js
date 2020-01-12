@@ -40,7 +40,7 @@ push = function(k, pr, pe) {
 };
 
 γ_continue = function(k, f) {
-  f(k = function CC(σ, ret){
+  f(k, function CC(σ, ret){
     k(ret);
   });
 };
