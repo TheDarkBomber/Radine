@@ -39,13 +39,13 @@ print(coolMathsGame(7)); // prints 3
 
 Blocks are formally defined as "a sequence of expressions". Yeah, they're just a special expression for `{ <code> };`, which is used frequently to substitute the one expression that expressions can take for multiple expressions.
 
-## If
+### If
 
 If! Everybody loves If! I don't need to explain much here but the syntax, which is: `if <condition> [then]* <expression> [[else] <expression>]`
 
 \* `then` is optional if the following expression is a block.
 
-## Local
+### Local
 
 Alright, a local is hard to explain. The name gives it a hint, however. "Local". It's easier to explain if I show the syntax: `local [name] ([assignment1], [assignment2], [...]) <expression>`. Notice it takes assignment expressions (e.g. `i = 0`), and not standard arguments. Essentially, loccals are expressions that have local variables that will **not** overshadow other variables. E.g.
 
@@ -94,12 +94,12 @@ local loop(i = 0) {
 
 Yeah, locals are epic.
 
-## Arrays
+### Arrays
 
 Arrays are defined, like in JS, as `sample = [[var1], [var2], [...]];`
 
 Not much to explain here, I just wanted to point out that the `push` primitive takes the **value** first, and the array second. Just to avoid some pebkac situations.
 
-## Primitives
+### Primitives
 
 These are simple. Functions which are predefined in JS. See `primitives.js`, after the `Shield` function.
