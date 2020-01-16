@@ -238,6 +238,8 @@ function makeJS(exp) {
       case "||":
         if (booleanRes(exp.left)) break;
         return "((πσ = " +  left + ") !== false ? πσ : " + right + ")";
+      case "^":
+        return "(" + left + "**" + right + ")";
     }
     return "(" + left + exp.operator + right + ")";
   }
@@ -566,6 +568,12 @@ function optimiseAST(exp) {
           return {
             type: "numerical",
             value: num(exp.left) % div(exp.right)
+          };
+        case "^":
+          change();
+          return {
+            type: "numerical",
+            value: num(exp.left) ** num(exp.right)
           };
         case "<":
           change();

@@ -1,2 +1,2 @@
-foo = input("test: ");
-print(foo);
+foo = input("Enter: ");
+print(foo^5);
