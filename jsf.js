@@ -161,7 +161,7 @@ function sideFX(exp) {
       return sideFX(exp.body);
 
     case "block":
-      for(let i = 0; i < exp.vars.length; ++i) {
+      for(let i = 0; i < exp.block.length; ++i) {
         if (sideFX(exp.block[i])) return true;
       }
       return false;
@@ -240,6 +240,10 @@ function makeJS(exp) {
         return "((πσ = " +  left + ") !== false ? πσ : " + right + ")";
       case "^":
         return "(" + left + "**" + right + ")";
+      case "root":
+        return "(" + right + "**" + "(1/" + left + "))";
+      case "log":
+        return "(" + "Math.log(" + right + ")" + "/ Math.log(" + left + "))";
     }
     return "(" + left + exp.operator + right + ")";
   }
@@ -574,6 +578,18 @@ function optimiseAST(exp) {
           return {
             type: "numerical",
             value: num(exp.left) ** num(exp.right)
+          };
+        case "root":
+          change();
+          return {
+            type: "numerical",
+            value: num(exp.right) ** (1 / div(exp.left))
+          };
+        case "log":
+          change();
+          return {
+            type: "numerical",
+            value: Math.log(div(exp.right)) / div(Math.log(div(exp.left)))
           };
         case "<":
           change();

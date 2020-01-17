@@ -33,7 +33,8 @@ class TStream {
   constructor(input) {
     this.input = input;
     this.current = null;
-    this.kw = " if then else function f true false local RAW "
+    this.kw = " if then else function f true false local RAW ";
+    this.αn = " root log ";
     tthis = this;
   }
 
@@ -61,6 +62,10 @@ class TStream {
 
   keyw(x) {
     return tthis.kw.indexOf(" " + x + " ") >= 0;
+  }
+
+  alphaOp(x) {
+    return tthis.αn.indexOf(" " + x + " ") >= 0;
   }
 
   digit(c) {
@@ -112,7 +117,7 @@ class TStream {
   readIdent() {
     var id = tthis.readWhilst(tthis.ident);
     return {
-        type: tthis.keyw(id) ? "keyword" : "variable",
+        type: tthis.keyw(id) ? "keyword" : tthis.alphaOp(id) ? "operator" : "variable",
         value: id
     };
   }
@@ -181,7 +186,7 @@ class Parser {
       "<": 7, ">": 7, "<=": 7, ">=": 7, "==": 7, "!=": 7,
       "+": 10, "-": 10,
       "*": 20, "/": 20, "%": 20,
-      "^": 30
+      "^": 30, "root": 30, "log": 30
     };
     pthis = this;
   }

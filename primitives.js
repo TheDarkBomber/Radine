@@ -56,7 +56,7 @@ halt = function(k){};
 input = function(k, prompt) {
   let rl = require('readline').createInterface({input: process.stdin, output: process.stdout});
   rl.question(prompt.toString(), function(response){
-    Execute(k, [ response ]);
     rl.close();
+    Execute(k, [ response ]);
   });
 };

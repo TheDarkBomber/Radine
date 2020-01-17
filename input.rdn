@@ -1,2 +1,15 @@
-foo = input("Enter: ");
-print(foo^5);
+mathsIsFun = function(p, a, b) {
+  if p == "^" then a^b
+  else if p == "root" then a root b
+  else if p == "log" then a log b;
+};
+
+local loop(p = input("Enter: ")) {
+  if (p != "root") && (p != "^") && (p != "log") {
+    print("Nope.");
+    loop(input("Try again: "));
+  };
+  x = input("a? ");
+  y = input("b? ");
+  print(mathsIsFun(p, x, y));
+};
