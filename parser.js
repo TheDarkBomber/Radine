@@ -37,7 +37,7 @@ class TStream {
   constructor(input) {
     this.input = input;
     this.current = null;
-    this.kw = " if then else function f true false local RAW ";
+    this.kw = " if then else function f true false local RAW arguments ";
     this.αn = " root log match ";
     tthis = this;
   }
@@ -259,6 +259,13 @@ class Parser {
         return {
           type: "negate",
           body: pthis.parseExpression()
+        };
+      }
+      if(pthis.keyword("arguments")) {
+        pthis.input.next();
+        return {
+          type: "array",
+          value: true
         };
       }
       if(pthis.punctuation("[")) return pthis.parseArray();

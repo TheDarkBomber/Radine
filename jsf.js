@@ -204,6 +204,7 @@ function makeJS(exp) {
   }
 
   function ArrayJS(exp) {
+    if (exp.value === true) return "Object.values(arguments).slice(1)";
     var a = [];
     exp.value.forEach(function(expr){
       a.push(JS(expr));

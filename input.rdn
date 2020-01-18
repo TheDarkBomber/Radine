@@ -9,16 +9,11 @@ forEach = f(list, m) {
   };
 };
 
-filterByRegex = function(list, rx) {
-  a = [];
-  forEach(list, f(e) {
-    if e match rx then push(e, a);
+print2 = function(x) {
+  forEach(arguments, f(e) {
+    write(e);
   });
-  (a);
+  print("");
 };
 
-test = ["12F4", "Z231", "64AE"];
-hexOnly = |^[0-9abcdef]+$|i;
-
-test = filterByRegex(test, hexOnly);
-print(test); // would output "12F4", "64AE"
+print2("Hey ", "there, ", "Gal", "ax", "y!"); // would output "Hey there, Galaxy!"
