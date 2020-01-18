@@ -51,7 +51,7 @@ class TStream {
       return tthis.readNext();
     }
     if(ch == '"') return tthis.readStr();
-    if(ch == "/") return tthis.readRegex();
+    if(ch == "|") return tthis.readRegex();
     if(tthis.digit(ch)) return tthis.readNum();
     if(tthis.pIdent(ch)) return tthis.readIdent();
     if(tthis.punctuation(ch)) return {
@@ -159,7 +159,7 @@ class TStream {
   }
 
   readRegex() {
-    var rx = tthis.readSKP("/");
+    var rx = tthis.readSKP("|");
     var flags = tthis.readWhilst(tthis.regexFlag);
     return {
       type: "regex",

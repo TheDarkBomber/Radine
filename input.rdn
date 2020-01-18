@@ -18,7 +18,7 @@ filterByRegex = function(list, rx) {
 };
 
 test = ["12F4", "Z231", "64AE"];
-hexOnly = /^[0-9abcdef]+$/i;
+hexOnly = |^[0-9abcdef]+$|i;
 
 test = filterByRegex(test, hexOnly);
 print(test); // would output "12F4", "64AE"
