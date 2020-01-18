@@ -65,6 +65,7 @@ function makeScope(exp) {
     switch(exp.type) {
       case "numerical":
       case "string":
+      case "regex":
       case "raw":
       case "array":
       case "index":
@@ -145,6 +146,7 @@ function sideFX(exp) {
 
     case "numerical":
     case "string":
+    case "regex":
     case "boolean":
     case "function":
     case "variable": return false;
@@ -179,6 +181,7 @@ function makeJS(exp) {
       case "numerical":
       case "string":
       case "boolean": return AtomJS(exp);
+      case "regex": return RegexJS(exp);
       case "array": return ArrayJS(exp);
       case "variable": return VarJS(exp);
       case "binary": return BinJS(exp);
@@ -206,6 +209,10 @@ function makeJS(exp) {
       a.push(JS(expr));
     });
     return `[${a}]`;
+  }
+
+  function RegexJS(exp) {
+    return `/${exp.value[0]}/${exp.value[1]}`;
   }
 
   function makeVar(name) {
@@ -244,6 +251,8 @@ function makeJS(exp) {
         return "(" + right + "**" + "(1/" + left + "))";
       case "log":
         return "(" + "Math.log(" + right + ")" + "/ Math.log(" + left + "))";
+      case "match":
+        return "(" + right + ".test(" + left + "))";
     }
     return "(" + left + exp.operator + right + ")";
   }
@@ -342,6 +351,7 @@ function toCPS(exp, k) {
       case "string":
       case "boolean":
       case "raw":
+      case "regex":
       case "array":
       case "index":
       case "variable": return cpsAtom(exp, k);
@@ -504,6 +514,7 @@ function optimiseAST(exp) {
     switch(exp.type) {
       case "numerical":
       case "string":
+      case "regex":
       case "boolean":
       case "raw":
       case "array":
@@ -530,6 +541,16 @@ function optimiseAST(exp) {
 
   function num(exp) {
     if (exp.type != "numerical") throw new Error("Not a number: " + JSON.stringify(exp));
+    return exp.value;
+  }
+
+  function str(exp) {
+    if (exp.type != "string") throw new Error("Not a string: " + JSON.stringify(exp));
+    return exp.value;
+  }
+
+  function reg(exp) {
+    if (exp.type != "regex") throw new Error("Not a regular expression: " + JSON.stringify(exp));
     return exp.value;
   }
 
@@ -637,6 +658,12 @@ function optimiseAST(exp) {
           change();
           if (exp.left.value !== false) return exp.right;
           return False;
+        case "match":
+          change();
+          return {
+            type: "boolean",
+            value: (new RegExp(reg(exp.right)[0], reg(exp.right)[1])).test(str(exp.left))
+          };
       }
     }
     return exp;

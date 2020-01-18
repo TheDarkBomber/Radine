@@ -1,15 +1,24 @@
-mathsIsFun = function(p, a, b) {
-  if p == "^" then a^b
-  else if p == "root" then a root b
-  else if p == "log" then a log b;
+forEach = f(list, m) {
+  local (n = length(list)) {
+    local loop(i = 0) {
+      if i < n then {
+        m(list[i], i);
+        loop(i + 1);
+      };
+    };
+  };
 };
 
-local loop(p = input("Enter: ")) {
-  if (p != "root") && (p != "^") && (p != "log") {
-    print("Nope.");
-    loop(input("Try again: "));
-  };
-  x = input("a? ");
-  y = input("b? ");
-  print(mathsIsFun(p, x, y));
+filterByRegex = function(list, rx) {
+  a = [];
+  forEach(list, f(e) {
+    if e match rx then push(e, a);
+  });
+  (a);
 };
+
+test = ["12F4", "Z231", "64AE"];
+hexOnly = /^[0-9abcdef]+$/i;
+
+test = filterByRegex(test, hexOnly);
+print(test); // would output "12F4", "64AE"

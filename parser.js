@@ -20,6 +20,10 @@ class CStream {
       return this.input.charAt(this.pos);
   }
 
+  peekNext() {
+    return this.input.charAt(this.pos + 1);
+  }
+
   eof() {
       return this.peek() == "";
   }
@@ -34,7 +38,7 @@ class TStream {
     this.input = input;
     this.current = null;
     this.kw = " if then else function f true false local RAW ";
-    this.αn = " root log ";
+    this.αn = " root log match ";
     tthis = this;
   }
 
@@ -42,11 +46,12 @@ class TStream {
     tthis.readWhilst(tthis.whitespace);
     if(tthis.input.eof()) return null;
     var ch = tthis.input.peek();
-    if (ch == "/" && tthis.input.next() == "/") {
+    if (ch == "/" && tthis.input.peekNext() == "/") {
       tthis.skip();
       return tthis.readNext();
     }
     if(ch == '"') return tthis.readStr();
+    if(ch == "/") return tthis.readRegex();
     if(tthis.digit(ch)) return tthis.readNum();
     if(tthis.pIdent(ch)) return tthis.readIdent();
     if(tthis.punctuation(ch)) return {
@@ -78,6 +83,10 @@ class TStream {
 
   ident(c) {
     return /[_a-z0-9-<>=~#@]/i.test(c);
+  }
+
+  regexFlag(c) {
+    return "gimsuy".indexOf(c) >= 0;
   }
 
   op(c) {
@@ -149,6 +158,15 @@ class TStream {
     };
   }
 
+  readRegex() {
+    var rx = tthis.readSKP("/");
+    var flags = tthis.readWhilst(tthis.regexFlag);
+    return {
+      type: "regex",
+      value: [rx, flags]
+    };
+  }
+
   skip() {
     tthis.readWhilst(function(ch){
       return ch != "\n";
@@ -183,6 +201,7 @@ class Parser {
       "=": 1,
       "||": 2,
       "&&": 3,
+      "match": 4,
       "<": 7, ">": 7, "<=": 7, ">=": 7, "==": 7, "!=": 7,
       "+": 10, "-": 10,
       "*": 20, "/": 20, "%": 20,
@@ -253,7 +272,7 @@ class Parser {
       }
       if(pthis.keyword("RAW")) return pthis.parseRAW();
       var t = pthis.input.next();
-      if(t.type == "variable" || t.type == "numerical" || t.type == "string") return t;
+      if(t.type == "variable" || t.type == "numerical" || t.type == "string" || t.type == "regex") return t;
       pthis.unexpected();
     });
   }
