@@ -37,7 +37,7 @@ class TStream {
   constructor(input) {
     this.input = input;
     this.current = null;
-    this.kw = " if then else function f true false local RAW arguments ";
+    this.kw = " if then else function f true false local RAW arguments low indifferent high ";
     this.αn = " root log match ";
     tthis = this;
   }
@@ -202,6 +202,7 @@ class Parser {
       "||": 2,
       "&&": 3,
       "match": 4,
+      "<=>": 6,
       "<": 7, ">": 7, "<=": 7, ">=": 7, "==": 7, "!=": 7,
       "+": 10, "-": 10,
       "*": 20, "/": 20, "%": 20,
@@ -272,6 +273,7 @@ class Parser {
       if(pthis.punctuation("{")) return pthis.parseBlock();
       if(pthis.keyword("if")) return pthis.parseIf();
       if(pthis.keyword("true") || pthis.keyword("false")) return pthis.parseBoolean();
+      if(pthis.keyword("low") || pthis.keyword("indifferent") || pthis.keyword("high")) return pthis.parseTrilean();
       if(pthis.keyword("local")) return pthis.parseLocal();
       if(pthis.keyword("function") || pthis.keyword("f")) {
         pthis.input.next();
@@ -455,6 +457,14 @@ class Parser {
     return {
       type: "boolean",
       value: pthis.input.next().value == "true"
+    };
+  }
+
+  parseTrilean() {
+    var t = pthis.input.next().value;
+    return {
+      type: "trilean",
+      value: t === "low" ? -1 : t === "high" ? 1 : 0
     };
   }
 

@@ -69,6 +69,7 @@ function makeScope(exp) {
       case "raw":
       case "array":
       case "index":
+      case "trilean":
       case "boolean": break;
 
       case "variable":
@@ -148,6 +149,7 @@ function sideFX(exp) {
     case "string":
     case "regex":
     case "boolean":
+    case "trilean":
     case "function":
     case "variable": return false;
 
@@ -181,6 +183,7 @@ function makeJS(exp) {
       case "numerical":
       case "string":
       case "boolean": return AtomJS(exp);
+      case "trilean": return TrileanJS(exp);
       case "regex": return RegexJS(exp);
       case "array": return ArrayJS(exp);
       case "variable": return VarJS(exp);
@@ -210,6 +213,12 @@ function makeJS(exp) {
       a.push(JS(expr));
     });
     return `[${a}]`;
+  }
+
+  function TrileanJS(exp) {
+    if(exp.value === -1) return "\"low\"";
+    if(exp.value === 0) return "\"indifferent\"";
+    if(exp.value === 1) return "\"high\"";
   }
 
   function RegexJS(exp) {
@@ -254,6 +263,8 @@ function makeJS(exp) {
         return "(" + "Math.log(" + right + ")" + "/ Math.log(" + left + "))";
       case "match":
         return "(" + right + ".test(" + left + "))";
+      case "<=>":
+        return "(" + left + "<" + right + " ? \"low\" : " + left + ">" + right + " ? \"high\" : \"indifferent\")";
     }
     return "(" + left + exp.operator + right + ")";
   }
@@ -351,6 +362,7 @@ function toCPS(exp, k) {
       case "numerical":
       case "string":
       case "boolean":
+      case "trilean":
       case "raw":
       case "regex":
       case "array":
@@ -517,6 +529,7 @@ function optimiseAST(exp) {
       case "string":
       case "regex":
       case "boolean":
+      case "trilean":
       case "raw":
       case "array":
       case "index":
@@ -650,6 +663,12 @@ function optimiseAST(exp) {
           return {
             type: "boolean",
             value: exp.left.value !== exp.right.value
+          };
+        case "<=>":
+          change();
+          return {
+            type: "trilean",
+            value: num(exp.left) < num(exp.right) ? -1 : num(exp.left) > num(exp.right) ? 1 : 0
           };
         case "||":
           change();
