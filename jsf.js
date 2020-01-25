@@ -69,7 +69,6 @@ function makeScope(exp) {
       case "raw":
       case "array":
       case "index":
-      case "spread":
       case "trilean":
       case "boolean": break;
 
@@ -131,6 +130,10 @@ function makeScope(exp) {
 
       case "negate":
         scope(exp.body, env);
+        break;
+
+      case "spread":
+        scope(exp.value, env);
         break;
 
       default:
@@ -382,13 +385,13 @@ function toCPS(exp, k) {
       case "regex":
       case "array":
       case "index":
-      case "spread":
       case "variable": return cpsAtom(exp, k);
 
       case "assign":
       case "binary": return cpsBin(exp, k);
 
       case "local": return cpsLocal(exp, k);
+      case "spread": return cpsSpread(exp, k);
       case "function": return cpsFunction(exp, k);
       case "if": return cpsIf(exp, k);
       case "block": return cpsBlock(exp, k);
@@ -402,6 +405,15 @@ function toCPS(exp, k) {
 
   function cpsAtom(exp, k) {
     return k(exp);
+  }
+
+  function cpsSpread(exp, k) {
+    return cps(exp.value, function(value){
+      return k({
+        type: "spread",
+        value: value
+      });
+    });
   }
 
   function cpsBin(exp, k) {
