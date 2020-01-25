@@ -288,6 +288,7 @@ var AST = new RParser.Parser(new RParser.TStream(new RParser.CStream(data))).par
 // require('fs').writeFileSync("./ast.json", JSON.stringify(AST));
 console.log("Transforming AST");
 var CPS = toCPS(AST, function(x){return x});
+// require('fs').writeFileSync("./cps.json", JSON.stringify(CPS));
 var optC = optimiseAST(CPS)
 console.log("Transpiling to JS");
 var newc = makeJS(optC);
@@ -298,7 +299,6 @@ require('fs').writeFileSync("./out.js", newc);
 console.log("Compiling JS via Nexe");
 compile(settings).then(() => { console.log("Radine application compiled!") });
 
-// require('fs').writeFileSync("./cps.json", JSON.stringify(CPS));
 
 
 // require('fs').writeFileSync("./ast.json", JSON.stringify(optC));

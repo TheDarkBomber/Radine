@@ -1,1 +1,20 @@
-print(input("First: ") <=> input("Second: "));
+forEach = f(list, m) {
+  local (n = length(list)) {
+    local loop(i = 0) {
+      if i < n then {
+        m(list[i], i);
+        loop(i + 1);
+      };
+    };
+  };
+};
+
+print2 = f(x) {
+  forEach(arguments, f(e) {
+    write(e);
+  });
+  print("");
+};
+
+foo = ["Hey t", "her", "e, Ga", "lax", "y!"];
+print2(...foo);

@@ -69,6 +69,7 @@ function makeScope(exp) {
       case "raw":
       case "array":
       case "index":
+      case "spread":
       case "trilean":
       case "boolean": break;
 
@@ -169,6 +170,15 @@ function sideFX(exp) {
         if (sideFX(exp.block[i])) return true;
       }
       return false;
+
+    case "spread":
+      return sideFX(exp.value);
+
+    case "array":
+      for(let i = 0; i < exp.value.length; ++i) {
+        if (sideFX(exp.value[i])) return true;
+      }
+      return false;
   }
   return true;
 }
@@ -184,6 +194,7 @@ function makeJS(exp) {
       case "string":
       case "boolean": return AtomJS(exp);
       case "trilean": return TrileanJS(exp);
+      case "spread": return SpreadJS(exp);
       case "regex": return RegexJS(exp);
       case "array": return ArrayJS(exp);
       case "variable": return VarJS(exp);
@@ -219,6 +230,10 @@ function makeJS(exp) {
     if(exp.value === -1) return "\"low\"";
     if(exp.value === 0) return "\"indifferent\"";
     if(exp.value === 1) return "\"high\"";
+  }
+
+  function SpreadJS(exp) {
+    return "...(" + JS(exp.value) + ")";
   }
 
   function RegexJS(exp) {
@@ -367,8 +382,8 @@ function toCPS(exp, k) {
       case "regex":
       case "array":
       case "index":
+      case "spread":
       case "variable": return cpsAtom(exp, k);
-
 
       case "assign":
       case "binary": return cpsBin(exp, k);
@@ -534,6 +549,7 @@ function optimiseAST(exp) {
       case "array":
       case "index":
       case "variable": return exp;
+      case "spread": return optimalSpread(exp);
       case "binary": return optimalBin(exp);
       case "assign": return optimalAssign(exp);
       case "if": return optimalIf(exp);
@@ -707,6 +723,13 @@ function optimiseAST(exp) {
     exp.left = optimise(exp.left);
     exp.right = optimise(exp.right);
     return exp;
+  }
+
+  function optimalSpread(exp) {
+    return {
+      type: "spread",
+      value: optimise(exp.value)
+    };
   }
 
   function optimalIf(exp) {

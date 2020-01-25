@@ -94,7 +94,7 @@ class TStream {
   }
 
   punctuation(c) {
-     return ",;(){}[]".indexOf(c) >= 0;
+     return ".,;(){}[]".indexOf(c) >= 0;
   }
 
   whitespace(c) {
@@ -271,6 +271,7 @@ class Parser {
       }
       if(pthis.punctuation("[")) return pthis.parseArray();
       if(pthis.punctuation("{")) return pthis.parseBlock();
+      if(pthis.punctuation(".")) return pthis.parseSpread();
       if(pthis.keyword("if")) return pthis.parseIf();
       if(pthis.keyword("true") || pthis.keyword("false")) return pthis.parseBoolean();
       if(pthis.keyword("low") || pthis.keyword("indifferent") || pthis.keyword("high")) return pthis.parseTrilean();
@@ -393,6 +394,16 @@ class Parser {
     var name = pthis.input.next();
     if(name.type != "variable") pthis.input.exeunt("Expected variable name");
     return name.value;
+  }
+
+  parseSpread() {
+    pthis.input.next();
+    pthis.skipPunctuation(".");
+    pthis.skipPunctuation(".");
+    return {
+      type: "spread",
+      value: pthis.parseExpression()
+    };
   }
 
   parseIf() {
