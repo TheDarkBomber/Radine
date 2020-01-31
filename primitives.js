@@ -7,7 +7,10 @@ function Execute(f, args) {
   } catch(ex) {
       if (ex instanceof Continuation)
           f = ex.f, args = ex.args;
-      else throw ex;
+      else {
+        console.log(`RUNTIME ERROR\nCode: ${ex.name}\nMessage: ${ex.message}\n`);
+        process.exit(1);
+      };
   }
 }
 
