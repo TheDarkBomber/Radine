@@ -136,6 +136,12 @@ function makeScope(exp) {
         scope(exp.value, env);
         break;
 
+      case "map":
+        exp.vars.forEach(function(vdef) {
+          scope(vdef.def, env);
+        });
+        break;
+
       default:
         throw new Error("Cannot make scope for " + JSON.stringify(exp));
     }
@@ -149,6 +155,7 @@ function sideFX(exp) {
     case "raw":
     case "assign": return true;
 
+    case undefined:
     case "numerical":
     case "string":
     case "regex":
@@ -162,6 +169,7 @@ function sideFX(exp) {
     case "if": return sideFX(exp.cond) || sideFX(exp.then) || (exp.else && sideFX(exp.else));
 
     case "local":
+    case "map":
       for(let i = 0; i < exp.vars.length; ++i) {
         var v = exp.vars[i];
         if (v.def && sideFX(v.def)) return true;
@@ -203,6 +211,7 @@ function makeJS(exp) {
       case "variable": return VarJS(exp);
       case "binary": return BinJS(exp);
       case "assign": return AssignJS(exp);
+      case "map": return MapJS(exp);
       case "local": return LocalJS(exp);
       case "function":return FunctionJS(exp);
       case "if": return IfJS(exp);
@@ -307,6 +316,16 @@ function makeJS(exp) {
     return code;
   }
 
+  function MapJS(exp) {
+    var code = "({";
+    exp.vars.forEach(function(vdef, i) {
+      if(i != (exp.vars.length - 1)) code += (makeVar(vdef.name) + ": " + JS(vdef.def) + ",");
+      else code += (makeVar(vdef.name) + ": " + JS(vdef.def));
+    });
+    code += "})";
+    return code;
+  }
+
   function LocalJS(exp) {
     if (exp.vars.length == 0) return JS(exp.body);
     let k = {
@@ -384,14 +403,15 @@ function toCPS(exp, k) {
       case "raw":
       case "regex":
       case "array":
-      case "index":
       case "variable": return cpsAtom(exp, k);
 
       case "assign":
       case "binary": return cpsBin(exp, k);
 
       case "local": return cpsLocal(exp, k);
+      case "map": return cpsMap(exp, k);
       case "spread": return cpsSpread(exp, k);
+      case "index": return cpsIndex(exp, k);
       case "function": return cpsFunction(exp, k);
       case "if": return cpsIf(exp, k);
       case "block": return cpsBlock(exp, k);
@@ -416,6 +436,16 @@ function toCPS(exp, k) {
     });
   }
 
+  function cpsIndex(exp, k) {
+    return cps(exp.index, function(value){
+      return k({
+        type: "index",
+        list: exp.list,
+        index: value
+      });
+    });
+  }
+
   function cpsBin(exp, k) {
     return cps(exp.left, function(left){
       return cps(exp.right, function(right){
@@ -427,6 +457,16 @@ function toCPS(exp, k) {
         });
       });
     });
+  }
+
+  function cpsMap(exp, k) {
+    return k((function loop(expr, i) {
+      if(i == exp.vars.length) return expr;
+      expr.vars[i].def = cps(expr.vars[i].def, function(def) {
+        return def;
+      });
+      return loop(expr, ++i);
+    })(exp, 0));
   }
 
   function cpsLocal(exp, k) {
@@ -566,6 +606,7 @@ function optimiseAST(exp) {
       case "assign": return optimalAssign(exp);
       case "if": return optimalIf(exp);
       case "block": return optimalBlock(exp);
+      case "map": return optimalMap(exp);
       case "call": return optimalCall(exp);
       case "function": return optimalFunction(exp);
       case "negate": return optimalNegate(exp);
@@ -804,6 +845,13 @@ function optimiseAST(exp) {
       method: optimise(method),
       args: exp.args.map(optimise)
     };
+  }
+
+  function optimalMap(exp) {
+    for (let i = 0; i < exp.vars.length; ++i) {
+      exp.vars[i].def = optimise(exp.vars[i].def);
+    }
+    return exp;
   }
 
   function optimalFunction(f) {

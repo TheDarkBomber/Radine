@@ -37,7 +37,7 @@ class TStream {
   constructor(input) {
     this.input = input;
     this.current = null;
-    this.kw = " if then else function f true false local RAW arguments low indifferent high ";
+    this.kw = " if then else function f true false local RAW arguments low indifferent high map ";
     this.αn = " root log match ";
     tthis = this;
   }
@@ -275,6 +275,7 @@ class Parser {
       if(pthis.keyword("if")) return pthis.parseIf();
       if(pthis.keyword("true") || pthis.keyword("false")) return pthis.parseBoolean();
       if(pthis.keyword("low") || pthis.keyword("indifferent") || pthis.keyword("high")) return pthis.parseTrilean();
+      if(pthis.keyword("map")) return pthis.parseMap();
       if(pthis.keyword("local")) return pthis.parseLocal();
       if(pthis.keyword("function") || pthis.keyword("f")) {
         pthis.input.next();
@@ -438,7 +439,15 @@ class Parser {
       pthis.input.next();
       def = pthis.parseExpression();
     }
-    return { name: name, def: def };
+    return { name: name, def: def || pthis.False };
+  }
+
+  parseMap() {
+    pthis.skipKeyword("map");
+    return {
+      type: "map",
+      vars: pthis.delimited("{", "}", ",", pthis.parseVardef)
+    };
   }
 
   parseLocal() {
