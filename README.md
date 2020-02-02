@@ -7,6 +7,13 @@ To compile a .rdn file:
 
 [name] means not the filepath!
 
+For example:
+```
+radine --input ./coolRdnPrg
+```
+
+`./` refers to the relative path with which `radine` was called.
+
 ## Syntax Overview
 
 ### Returning values
