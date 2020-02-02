@@ -68,7 +68,6 @@ function makeScope(exp) {
       case "regex":
       case "raw":
       case "array":
-      case "index":
       case "trilean":
       case "boolean": break;
 
@@ -142,6 +141,11 @@ function makeScope(exp) {
         });
         break;
 
+      case "index":
+        scope(exp.list, env);
+        scope(exp.index, env);
+        break;
+
       default:
         throw new Error("Cannot make scope for " + JSON.stringify(exp));
     }
@@ -184,6 +188,9 @@ function sideFX(exp) {
 
     case "spread":
       return sideFX(exp.value);
+
+    case "index":
+      return sideFX(exp.index);
 
     case "array":
       for(let i = 0; i < exp.value.length; ++i) {
@@ -599,9 +606,9 @@ function optimiseAST(exp) {
       case "trilean":
       case "raw":
       case "array":
-      case "index":
       case "variable": return exp;
       case "spread": return optimalSpread(exp);
+      case "index": return optimalIndex(exp);
       case "binary": return optimalBin(exp);
       case "assign": return optimalAssign(exp);
       case "if": return optimalIf(exp);
@@ -782,6 +789,14 @@ function optimiseAST(exp) {
     return {
       type: "spread",
       value: optimise(exp.value)
+    };
+  }
+
+  function optimalIndex(exp) {
+    return {
+      type: "index",
+      list: exp.list,
+      index: optimise(exp.index)
     };
   }
 

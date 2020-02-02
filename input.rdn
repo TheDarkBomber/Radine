@@ -1,12 +1,5 @@
-sum = f(a, b) a + b;
-test = false;
+foo = false;
+sum = f(a, b) [a + b];
 
-local (far = sum(8, 7))
-  test = map {
-    foo = 1,
-    bar = 2,
-    baz = 3,
-    far = far
-  };
-
-print(test[input("")]);
+foo = sum(5, 7); // Array of [12]
+print(foo[0]);
