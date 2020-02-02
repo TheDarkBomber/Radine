@@ -1,0 +1,41 @@
+forEach = f(list, m) {
+  local (n = length(list)) {
+    local loop(i = 0) {
+      if i < n then {
+        m(list[i], i);
+        loop(i + 1);
+      };
+    };
+  };
+};
+
+zip = f(a, b) {
+	x = [];
+	forEach(a, f(e, i) {
+		local (y = []) {
+			push(a[i], y);
+			push(b[i], y);
+			push(y, x);
+		}
+	});
+	x
+};
+
+setAttr = f(map#, attr, val) map#[attr] = val;
+
+class = f() {
+	args = arguments;
+	f() {
+		names = zip(args, arguments);
+		out = map {};
+		forEach(names, f(e) {
+			setAttr(out, e[0], e[1]);
+		});
+		out
+	}
+};
+
+MyClass = class("a", "b");
+obj = MyClass("x", "y");
+print(obj["a"]);
+print(obj["b"]);
