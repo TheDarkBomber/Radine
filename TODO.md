@@ -1,106 +1,37 @@
 # Radine Todo List
 
-## Exponentiation, roots, and logarithms.
+Ok, new TODO list!
 
-You know, basic things such as 2^4, 2 root 4 (square root of 4), 2 log 4 (log of 4 with base of 2)
+## Pick Operators
 
-Theoretical Usage:
+This refers to two operators, `<?` and `>?`. These mean "pick the lesser/greater expression" respectively. E.g.
 
-```
-mathsIsFun = function(p, a, b) {
-  if p == "^" then a^b
-  else if p == "root" then a root b
-  else if p == "log" then a log b;
-};
-
-local loop(p = input("Enter: ")) {
-  if (p != "root") || (p != "^") || (p != "log") {
-    print("Nope.");
-    loop(input("Try again: "));
-  }; 
-  x = input("a? ");
-  y = input("b? ");
-  print(mathsIsFun(p, x, y));
-};
+```rdn
+a = input("a? ") * 1;
+b = input("b? ") * 1;
+write(a >? b);
+print(" is the larger number.");
 ```
 
-## Regular Expressions
+## "Explicit" keyword
 
-RegEx! Can't live without them. However, I'd like it so that RegEx is only match tested as a binary expression, so `"Hey there, Galaxy" match /[a-z]/i`. I just don't like implementing things as primitives if it can be avoided.
+As you saw above, in order to ensure the user input is a number (which we didn't need to), we had to exploit JavaScript's type fucking. Whilst it's very useful to have implicit types by default, it would also be useful to have explicit type assignment (especially for the different number types). E.g.
 
-Theoretical Usage:
-
-```
-// insert "forEach" function here
-
-filterByRegex = function(list, rx) {
-  a = [];
-  forEach(list, f(e) {
-    if e match rx then push(e, a);
-  });
-  (a);
-};
-
-test = ["12F4", "Z231", "64AE"];
-hexOnly = /[0-9][a-z]/i
-
-test = filterByRegex(test, hexOnly);
-print(test); // would output "12F4", "64AE"
+```rdn
+foo = explicit uint32 473; // define foo to be an unsigned integer of 32 bits (by default it is a signed float)
+bar = explicit number input("Enter: "); // define bar to be a signed float; casting the user input to it.
+// ...
+bar = explicit string bar; // cast bar to a string.
 ```
 
-## Arguments keyword
+This will introduce a new AST type: "explicit".
 
-Yes, it returns the arguments its parennt function was called with as an array.
-
-Theoretical Usage:
-
-```
-// insert "forEach" function here
-
-print2 = function(x) {
-  forEach(arguments, f(e) {
-    write(e);
-  });
-  print("");
-};
-
-print2("Hey ", "there, ", "Gal", "ax", "y!"); // would output "Hey there, Galaxy!"
-```
-
-## WithCall and CallWith
-
-This is mostly on the esoteric side of things. `with <array of args>, [array of args2], [...] call <method>` and `call <method1>, [method2], [...] with <array of args>`. The former calls a single method multiple times with different arguments. The latter calls multiple methods once with the same arguments. They return an array of values.
-
-Theoretical Usage:
-
-```
-sum = f(a, b) a + b;
-mul = f(a, b) a * b;
-div = f(a, b) a / b;
-mod = f(a, b) a % b;
-
-cycle = call sum, mul, div, mod with [2, 2];
-print(cycle); // would output "4, 4, 1, 0"
-
-// insert function here that is, to you, a black box (it is named "blackbox")
-
-testOutputs = with [4, 5], [7, 2], [0, 9], [7, 1] call blackbox;
-print(testOutputs); // would return "264, 13, 61, 75"
-```
-
-## General Namespaces
-
-Simple enough. Things within things. Accessing deeper. `x.y`. `thing.otherThing != otherThing`.
-
-Theoretical Usage:
-
-```
-galaxy = namespace {
-  what = 264;
-};
-
-what = 13;
-
-print(what); // would output "13"
-print(galaxy.what); // would output "264"
+Typical `explicit` node:
+```json
+type: "explicit",
+vartype: "uint32",
+value: {
+  type: "numerical",
+  value: 473
+}
 ```
