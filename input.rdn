@@ -1,5 +1,4 @@
-foo = false;
-sum = f(a, b) [a + b];
-
-foo = sum(5, 7); // Array of [12]
-print(foo[0]);
+foo = input("A: ");
+bar = input("B: ");
+write(foo >? bar);
+print(" is the larger value.");

@@ -300,6 +300,10 @@ function makeJS(exp) {
         return "(" + right + ".test(" + left + "))";
       case "<=>":
         return "(" + left + "<" + right + " ? \"low\" : " + left + ">" + right + " ? \"high\" : \"indifferent\")";
+      case "<?":
+        return "(" + left + "<=" + right + "?" + left + ":" + right + ")";
+      case ">?":
+        return "(" + left + ">=" + right + "?" + left + ":" + right + ")";
     }
     return "(" + left + exp.operator + right + ")";
   }
@@ -714,6 +718,18 @@ function optimiseAST(exp) {
           return {
             type: "boolean",
             value: num(exp.left) > num(exp.right)
+          };
+        case "<?":
+          change();
+          return {
+            type: "numerical",
+            value: num(exp.left) < num(exp.right) ? exp.left : exp.right
+          };
+        case ">?":
+          change();
+          return {
+            type: "numerical",
+            value: num(exp.left) > num(exp.right) ? exp.left : exp.right
           };
         case "<=":
           change();
