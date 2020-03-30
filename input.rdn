@@ -1,4 +1,7 @@
-foo = input("A: ");
-bar = input("B: ");
-write(foo >? bar);
-print(" is the larger value.");
+sum => {
+  a = arguments[0];
+  b = arguments[1];
+  a + b
+};
+
+print(sum(3, 4));

@@ -417,7 +417,7 @@ function toCPS(exp, k) {
       case "array":
       case "variable": return cpsAtom(exp, k);
 
-      case "assign":
+      case "assign": return cpsAssign(exp, k);
       case "binary": return cpsBin(exp, k);
 
       case "local": return cpsLocal(exp, k);
@@ -456,6 +456,25 @@ function toCPS(exp, k) {
         index: value
       });
     });
+  }
+
+  function cpsAssign(exp, k) {
+    if (exp.operator == "=>") {
+      return cps({
+        type: "function",
+        vars: [],
+        body: exp.right,
+        arrow: "k"
+      }, function(right) {
+        return k({
+          type: "assign",
+          operator: "=",
+          left: exp.left,
+          right: right
+        });
+      })
+    }
+    else return cpsBin(exp, k);
   }
 
   function cpsBin(exp, k) {

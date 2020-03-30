@@ -198,7 +198,7 @@ class Parser {
     this.input = input;
     this.False = { type: "boolean", value: false };
     this.Precedence = {
-      "=": 1,
+      "=": 1, "=>": 1,
       "||": 2,
       "&&": 3,
       "match": 4,
@@ -326,6 +326,11 @@ class Parser {
     };
   }
 
+  decideAssignment(opSymbol) {
+    if (opSymbol.charAt(0) === "=" && opSymbol.charAt(1) !== "=") return true;
+    else return false;
+  }
+
   expectBin(left, prec) {
     var t = pthis.op();
     if(t) {
@@ -334,7 +339,7 @@ class Parser {
         pthis.input.next();
         var right = pthis.expectBin(pthis.parseAtom(), oPrec);
         var binary = {
-          type: t.value == "=" ? "assign" : "binary",
+          type: pthis.decideAssignment(t.value) ? "assign" : "binary",
           operator: t.value,
           left: left,
           right: right
