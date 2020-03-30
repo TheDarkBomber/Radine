@@ -443,6 +443,13 @@ class Parser {
     if(pthis.op("=")) {
       pthis.input.next();
       def = pthis.parseExpression();
+    } else if(pthis.op("=>")) {
+      pthis.input.next();
+      def = {
+        type: "function",
+        vars: [],
+        body: pthis.parseExpression()
+      };
     }
     return { name: name, def: def || pthis.False };
   }
