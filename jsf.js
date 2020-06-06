@@ -287,6 +287,7 @@ function makeJS(exp) {
       case "Shield": return "γ_Shield";
       case "Continuation": return "γ_Continuation";
       case "Execute": return "γ_Execute";
+      case "GotoPStack": return "γ_GotoPStack";
       case "class": return "γ_class";
     }
     return name.replace("@", "ΓAT").replace("~", "ΓTD").replace("=", "ΓEQ").replace("<", "ΓLT").replace(">", "ΓGT").replace("-", "ΓHY").replace("#", "ΓHT");

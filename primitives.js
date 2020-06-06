@@ -1,5 +1,6 @@
 var Stacklen;
 var πσ;
+var π_PSTACK = [];
 function Execute(f, args) {
   while (true) try {
       Stacklen = 200;
@@ -23,6 +24,13 @@ function Shield(args, f) {
   if (--Stacklen < 0) throw new Continuation(f, args);
 }
 
+function GotoPStack(f) {
+  f(function π_GOTO(r){
+    var h = π_PSTACK.pop();
+    h(r);
+  });
+}
+
 print = function(k, txt) {
   console.log(txt);
   k(false);
@@ -42,6 +50,7 @@ push = function(k, pr, pe) {
   k(false);
 };
 
+// This primitive will be discontinued by next official release.
 γ_continue = function(k, f) {
   f(k, function CC(σ, ret){
     k(ret);
