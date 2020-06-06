@@ -1,6 +1,12 @@
+// Testing $ and #
+print(#f() {
+  1 + $f(k) k(k(2)); // 4
+});
+
+print(" "); // Testing @ again due to change to cpsSle
 foo = false;
 i = 0;
 @f(k) foo = k;
 print(i);
 i = i + 1;
-if i < 5 then foo();
+if i <= 5 then foo();

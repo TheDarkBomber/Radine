@@ -25,8 +25,22 @@ function makeContinuation(k) {
 
 function getSLE(tag) {
   switch(tag) {
-    case "@":
+    case "@": // Continue (Call with current continuation)
       return "function(k, A) { A(k, function CC(σ, ret){ k(ret); }); }";
+    case "$": // Shift P-Stack
+      return "function (γk, A) { " +
+      "  GotoPStack(function(π_GOTO){ " +
+      "    A(π_GOTO, function SK (γK, v){ " +
+      "      π_PSTACK.push(γK); " +
+      "      γk(v); " +
+      "    }); " +
+      "  }); " +
+      "}"
+    case "#": // Reset P-Stack
+      return "function (γk, A) { " +
+      "  π_PSTACK.push(γk); " +
+      "  GotoPStack(A); " +
+      "}"
     default:
       throw new Error("Unknown SLE: " + tag);
   }
@@ -546,13 +560,14 @@ function toCPS(exp, k) {
   }
 
   function cpsSle(exp, k) {
+    var cont = makeContinuation(k);
     return cps(exp.arg, function(value){
-      return k({
+      return {
         type: "sle",
         tag: exp.tag,
         arg: value,
         cont: makeContinuation(k)
-      });
+      };
     });
   }
 

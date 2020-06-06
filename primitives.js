@@ -26,8 +26,7 @@ function Shield(args, f) {
 
 function GotoPStack(f) {
   f(function π_GOTO(r){
-    var h = π_PSTACK.pop();
-    h(r);
+    π_PSTACK.pop()(r);
   });
 }
 
