@@ -94,7 +94,7 @@ class TStream {
   }
 
   punctuation(c) {
-     return ".,;(){}[]".indexOf(c) >= 0;
+     return ".,;(){}[]@$#".indexOf(c) >= 0;
   }
 
   whitespace(c) {
@@ -282,6 +282,9 @@ class Parser {
         return pthis.parseFunction();
       }
       if(pthis.keyword("RAW")) return pthis.parseRAW();
+      if(pthis.punctuation("@")) return pthis.parseSLE("@");
+      if(pthis.punctuation("$")) return pthis.parseSLE("$");
+      if(pthis.punctuation("#")) return pthis.parseSLE("#");
       var t = pthis.input.next();
       if(t.type == "variable" || t.type == "numerical" || t.type == "string" || t.type == "regex") return t;
       pthis.unexpected();
@@ -497,6 +500,15 @@ class Parser {
     return {
       type: "trilean",
       value: t === "low" ? -1 : t === "high" ? 1 : 0
+    };
+  }
+
+  parseSLE(tag) {
+    pthis.skipPunctuation(tag);
+    return {
+      type: "sle",
+      tag: tag,
+      arg: pthis.parseExpression()
     };
   }
 

@@ -1,7 +1,6 @@
-sum => {
-  a = arguments[0];
-  b = arguments[1];
-  a + b
-};
-
-print(sum(3, 4));
+foo = false;
+i = 0;
+@f(k) foo = k;
+print(i);
+i = i + 1;
+if i < 5 then foo();

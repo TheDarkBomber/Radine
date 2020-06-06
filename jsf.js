@@ -23,6 +23,15 @@ function makeContinuation(k) {
   };
 }
 
+function getSLE(tag) {
+  switch(tag) {
+    case "@":
+      return "function(k, A) { A(k, function CC(σ, ret){ k(ret); }); }";
+    default:
+      throw new Error("Unknown SLE: " + tag);
+  }
+}
+
 class Environment {
     constructor(parent) {
       this.parent = parent;
@@ -146,6 +155,10 @@ function makeScope(exp) {
         scope(exp.index, env);
         break;
 
+      case "sle":
+        scope(exp.arg, env);
+        break;
+
       default:
         throw new Error("Cannot make scope for " + JSON.stringify(exp));
     }
@@ -157,6 +170,7 @@ function sideFX(exp) {
   switch(exp.type) {
     case "call":
     case "raw":
+    case "sle":
     case "assign": return true;
 
     case undefined:
@@ -224,6 +238,7 @@ function makeJS(exp) {
       case "if": return IfJS(exp);
       case "block": return BlockJS(exp);
       case "call": return CallJS(exp);
+      case "sle": return SleJS(exp);
       case "index": return IndexJS(exp);
       case "raw": return RawJS(exp);
       case "negate": return NegateJS(exp);
@@ -372,6 +387,17 @@ function makeJS(exp) {
     return JS(exp.method) + "(" + exp.args.map(JS).join(", ") + ")";
   }
 
+  function SleJS(exp) {
+    return JS({
+      type: "call",
+      method: {
+          type: "raw",
+          code: getSLE(exp.tag)
+      },
+      args: [ exp.cont, exp.arg ]
+    });
+  }
+
   function IndexJS(exp) {
     return JS(exp.list) + "[" + JS(exp.index) + "]";
   }
@@ -421,6 +447,7 @@ function toCPS(exp, k) {
       case "binary": return cpsBin(exp, k);
 
       case "local": return cpsLocal(exp, k);
+      case "sle": return cpsSle(exp, k);
       case "map": return cpsMap(exp, k);
       case "spread": return cpsSpread(exp, k);
       case "index": return cpsIndex(exp, k);
@@ -515,6 +542,17 @@ function toCPS(exp, k) {
         }
       }
     }, k);
+  }
+
+  function cpsSle(exp, k) {
+    return cps(exp.arg, function(value){
+      return k({
+        type: "sle",
+        tag: exp.tag,
+        arg: value,
+        cont: makeContinuation(k)
+      });
+    });
   }
 
   function cpsFunction(exp, k) {
@@ -633,6 +671,7 @@ function optimiseAST(exp) {
       case "variable": return exp;
       case "spread": return optimalSpread(exp);
       case "index": return optimalIndex(exp);
+      case "sle": return optimalSle(exp);
       case "binary": return optimalBin(exp);
       case "assign": return optimalAssign(exp);
       case "if": return optimalIf(exp);
@@ -833,6 +872,15 @@ function optimiseAST(exp) {
       type: "index",
       list: exp.list,
       index: optimise(exp.index)
+    };
+  }
+
+  function optimalSle(exp) {
+    return {
+      type: "sle",
+      tag: exp.tag,
+      arg: optimise(exp.arg),
+      cont: exp.cont
     };
   }
 
