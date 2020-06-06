@@ -1,9 +1,9 @@
-// Testing $ and #
-print(#f() {
+// Testing f:
+print(#f: {
   1 + $f(k) k(k(2)); // 4
 });
 
-print(" "); // Testing @ again due to change to cpsSle
+print(" "); // (leftover) Testing @ again due to change to cpsSle
 foo = false;
 i = 0;
 @f(k) foo = k;

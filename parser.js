@@ -94,7 +94,7 @@ class TStream {
   }
 
   punctuation(c) {
-     return ".,;(){}[]@$#".indexOf(c) >= 0;
+     return ".,:;(){}[]@$#".indexOf(c) >= 0;
   }
 
   whitespace(c) {
@@ -433,10 +433,15 @@ class Parser {
   }
 
   parseFunction() {
+    var noArgs = false;
+    if (pthis.input.peek().type == "punctuation" && pthis.input.peek().value == ":") {
+      noArgs = true;
+      pthis.skipPunctuation(":");
+    }
     return {
       type: "function",
       name: pthis.input.peek().type == "variable" ? pthis.input.next().value : null,
-      vars: pthis.delimited("(", ")", ",", pthis.parseVarnym),
+      vars: !noArgs ? pthis.delimited("(", ")", ",", pthis.parseVarnym) : [],
       body: pthis.parseExpression()
     };
   }
