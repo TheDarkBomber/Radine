@@ -37,7 +37,7 @@ class TStream {
   constructor(input) {
     this.input = input;
     this.current = null;
-    this.kw = " if then else function f true false local RAW arguments low indifferent high map ";
+    this.kw = " if then else function f true false local RAW arguments low indifferent high map declare ";
     this.αn = " root log match ";
     tthis = this;
   }
@@ -277,6 +277,7 @@ class Parser {
       if(pthis.keyword("low") || pthis.keyword("indifferent") || pthis.keyword("high")) return pthis.parseTrilean();
       if(pthis.keyword("map")) return pthis.parseMap();
       if(pthis.keyword("local")) return pthis.parseLocal();
+      if(pthis.keyword("declare")) return pthis.parseDeclare();
       if(pthis.keyword("function") || pthis.keyword("f")) {
         pthis.input.next();
         return pthis.parseFunction();
@@ -434,7 +435,7 @@ class Parser {
 
   parseFunction() {
     var noArgs = false;
-    if (pthis.input.peek().type == "punctuation" && pthis.input.peek().value == ":") {
+    if (pthis.punctuation(":")) {
       noArgs = true;
       pthis.skipPunctuation(":");
     }
@@ -520,6 +521,31 @@ class Parser {
       method: core,
       args: [ arg ]
     }
+  }
+
+  parseDeclare() {
+    pthis.skipKeyword("declare");
+    var items;
+    var itemsF = [];
+    if (pthis.punctuation(":")) {
+      pthis.skipPunctuation(":");
+      items = [ pthis.parseVarnym() ];
+    } else items = pthis.delimited("[", "]", ",", pthis.parseVarnym);
+    items.forEach(e => {
+      itemsF.push({
+        type: "assign",
+        operator: "=",
+        left: {
+          type: "variable",
+          value: e
+        },
+        right: pthis.False
+      });
+    });
+    return {
+      type: "block",
+      block: itemsF
+    };
   }
 
   parseRAW() {
