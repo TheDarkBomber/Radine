@@ -510,11 +510,16 @@ class Parser {
 
   parseSLE(tag) {
     pthis.skipPunctuation(tag);
-    return {
+    var core =  {
       type: "sle",
-      tag: tag,
-      arg: pthis.parseExpression()
+      tag: tag
     };
+    var arg = pthis.parseExpression();
+    return {
+      type: "call",
+      method: core,
+      args: [ arg ]
+    }
   }
 
   parseRAW() {

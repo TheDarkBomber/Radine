@@ -62,6 +62,13 @@ wait = function(k, t) {
   }, t);
 };
 
+exception = function(k, msg, code = "Program-thrown") {
+  var err = new Error(msg);
+  err.name = code;
+  throw err;
+  k(false);
+};
+
 halt = function(k){};
 
 input = function(k, prompt) {

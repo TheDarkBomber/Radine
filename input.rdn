@@ -1,12 +1,13 @@
-// Testing f:
-print(#f: {
-  1 + $f(k) k(k(2)); // 4
-});
+n = input("Input a number between 1 and 20 incl. ");
+if (n < 1) || (n > 20) then
+  exception("Number is not in between 1 and 20 incl.");
 
-print(" "); // (leftover) Testing @ again due to change to cpsSle
 foo = false;
 i = 0;
 @f(k) foo = k;
+
 print(i);
 i = i + 1;
-if i <= 5 then foo();
+
+if i <= n then
+  foo();

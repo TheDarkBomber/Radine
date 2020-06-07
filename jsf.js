@@ -92,6 +92,7 @@ function makeScope(exp) {
       case "raw":
       case "array":
       case "trilean":
+      case "sle":
       case "boolean": break;
 
       case "variable":
@@ -168,10 +169,11 @@ function makeScope(exp) {
         scope(exp.list, env);
         scope(exp.index, env);
         break;
-
+      /*
       case "sle":
         scope(exp.arg, env);
         break;
+      */
 
       default:
         throw new Error("Cannot make scope for " + JSON.stringify(exp));
@@ -404,12 +406,8 @@ function makeJS(exp) {
 
   function SleJS(exp) {
     return JS({
-      type: "call",
-      method: {
-          type: "raw",
-          code: getSLE(exp.tag)
-      },
-      args: [ exp.cont, exp.arg ]
+        type: "raw",
+        code: getSLE(exp.tag)
     });
   }
 
@@ -456,13 +454,13 @@ function toCPS(exp, k) {
       case "raw":
       case "regex":
       case "array":
+      case "sle":
       case "variable": return cpsAtom(exp, k);
 
       case "assign": return cpsAssign(exp, k);
       case "binary": return cpsBin(exp, k);
 
       case "local": return cpsLocal(exp, k);
-      case "sle": return cpsSle(exp, k);
       case "map": return cpsMap(exp, k);
       case "spread": return cpsSpread(exp, k);
       case "index": return cpsIndex(exp, k);
@@ -559,6 +557,7 @@ function toCPS(exp, k) {
     }, k);
   }
 
+/*
   function cpsSle(exp, k) {
     var cont = makeContinuation(k);
     return cps(exp.arg, function(value){
@@ -566,10 +565,11 @@ function toCPS(exp, k) {
         type: "sle",
         tag: exp.tag,
         arg: value,
-        cont: makeContinuation(k)
+        cont: cont
       };
     });
   }
+*/
 
   function cpsFunction(exp, k) {
     var cont = gensym("K");
@@ -684,10 +684,10 @@ function optimiseAST(exp) {
       case "trilean":
       case "raw":
       case "array":
+      case "sle":
       case "variable": return exp;
       case "spread": return optimalSpread(exp);
       case "index": return optimalIndex(exp);
-      case "sle": return optimalSle(exp);
       case "binary": return optimalBin(exp);
       case "assign": return optimalAssign(exp);
       case "if": return optimalIf(exp);
