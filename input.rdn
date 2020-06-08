@@ -1,7 +1,7 @@
 declare [foo, bar];
 
 local (far = "xyz") {
-  foo = f: {far};
+  foo = f: far;
   bar = f(msg) far = msg;
 };
 

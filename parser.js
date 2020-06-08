@@ -441,7 +441,7 @@ class Parser {
     }
     return {
       type: "function",
-      name: pthis.input.peek().type == "variable" ? pthis.input.next().value : null,
+      name: pthis.input.peek().type == "variable" && !noArgs ? pthis.input.next().value : null,
       vars: !noArgs ? pthis.delimited("(", ")", ",", pthis.parseVarnym) : [],
       body: pthis.parseExpression()
     };
