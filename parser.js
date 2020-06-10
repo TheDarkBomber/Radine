@@ -300,7 +300,7 @@ class Parser {
 
   expectCall(expr) {
     expr = expr();
-    return pthis.punctuation("(") ? pthis.parseCall(expr) : pthis.punctuation("[") ? pthis.parseIndex(expr) : expr;
+    return pthis.punctuation("(") ? pthis.parseCall(expr) : pthis.punctuation("[") ? pthis.parseIndex(expr) : pthis.punctuation(".") ? pthis.parseDot(expr) : expr;
   }
 
   parseCall(method) {
@@ -319,6 +319,19 @@ class Parser {
     return {
       type: "index",
       list: list,
+      index: dx
+    };
+  }
+
+  parseDot(expr) {
+    var dx;
+    pthis.skipPunctuation(".");
+    dx = pthis.input.next();
+    if (dx.type !== "variable") pthis.input.exeunt("Unexpected " + dx.type);
+    dx.type = "string";
+    return {
+      type: "index",
+      list: expr,
       index: dx
     };
   }
