@@ -1,3 +1,5 @@
+// Original version written by Hexbombs
+
 forEach = f(list, m) {
   local (n = length(list)) {
     local loop(i = 0) {
@@ -23,9 +25,9 @@ zip = f(a, b) {
 
 setAttr = f(map#, attr, val) map#[attr] = val;
 
-class = f() {
+class = f: {
 	args = arguments;
-	f() {
+	f: {
 		names = zip(args, arguments);
 		out = map {};
 		forEach(names, f(e) {
@@ -37,5 +39,5 @@ class = f() {
 
 MyClass = class("a", "b");
 obj = MyClass("x", "y");
-print(obj["a"]);
-print(obj["b"]);
+print(obj.a);
+print(obj.b);
