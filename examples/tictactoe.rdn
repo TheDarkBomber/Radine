@@ -1,0 +1,85 @@
+// Declare for @-based loop
+// X is true, O is false.
+declare [round, gameOver, turn, invalidMove, winner];
+
+// Welcome Screen
+print("Welcome to Tic Tac Toe!");
+wait(430);
+p1 = input("Please enter your name, X: ");
+p2 = input("Please enter your name, O: ");
+
+grid = ["0", "1", "2", "3", "4", "5", "6", "7", "8"];
+
+// Shorthand
+grv = f(i) {
+  write("["); write(grid[i]); write("]");
+};
+
+displayGrid = f: {
+  grv(0); grv(3); grv(6);
+  print("");
+  grv(1); grv(4); grv(7);
+  print("");
+  grv(2); grv(5); grv(8);
+  print("");
+};
+
+calcGrid = f: {
+  if grid[0] == grid[4] && grid[4] == grid[8] {
+    gameOver = true;
+    winner = if grid[0] == "X" then p1 else p2;
+  } else if grid[6] == grid[4] && grid[4] == grid[2] {
+    gameOver = true;
+    winner = if grid[0] == "X" then p1 else p2;
+  } else if grid[0] == grid[3] && grid[3] == grid[6] {
+    gameOver = true;
+    winner = if grid[0] == "X" then p1 else p2;
+  } else if grid[1] == grid[4] && grid[4] == grid[7] {
+    gameOver = true;
+    winner = if grid[1] == "X" then p1 else p2;
+  } else if grid[2] == grid[5] && grid[5] == grid[8] {
+    gameOver = true;
+    winner = if grid[2] == "X" then p1 else p2;
+  } else if grid[0] == grid[1] && grid[1] == grid[2] {
+    gameOver = true;
+    winner = if grid[0] == "X" then p1 else p2;
+  } else if grid[3] == grid[4] && grid[4] == grid[5] {
+    gameOver = true;
+    winner = if grid[3] == "X" then p1 else p2;
+  } else if grid[6] == grid[7] && grid[7] == grid[8] {
+    gameOver = true;
+    winner = if grid[6] == "X" then p1 else p2;
+  };
+};
+
+// Game loop
+@f(k) round = k; // Set round to the continuation at this point.
+turn = !turn; // Toggle whose turn it is.
+write(if turn then p1 else p2); print(", your turn!");
+wait(320);
+displayGrid();
+wait(500);
+@f(k) invalidMove = k; // Set invalidMove to the continuation at this point.
+move = input("Make your move: ");
+local (iv) {
+  if move < 0 || move > 8 || !(move match |[0-9]+|)
+    then iv = true
+  else if grid[move*1] != move then iv = true;
+  if iv {
+    print("INVALID MOVE!");
+    if input("End game? (Y/n) ") == "Y" then halt();
+    invalidMove();
+  }
+};
+// If at this point, ale li pona. Make the move.
+grid[move*1] = if turn then "X" else "O";
+wait(move*1); // lul
+calcGrid();
+print(grid);
+if !gameOver then round();
+
+print("");
+print("GAME OVER!");
+write(p1); print(" wins!");
+input("Press any key to exit...");
+wait(2000);
