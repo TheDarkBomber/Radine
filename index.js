@@ -225,12 +225,12 @@ var yargs = require('yargs').options({
     type: 'string'
   }, 'icon': {
     default: __dirname + "\\" + 'radine.ico',
-    describe: 'Icon to apply to file if possible.',
+    describe: 'Icon to apply to file if possible. (WINDOWS ONLY)',
     type: 'string'
   }
 }).help().argv;
 
-if(!yargs.output) yargs.output = yargs.input.split("/")[-1];
+// if(!yargs.output) yargs.output = yargs.input.split("/")[-1];
 
 var input = invocation + "out.js";
 if (yargs.input.startsWith("./")) {
@@ -293,8 +293,8 @@ var optC = optimiseAST(CPS)
 console.log("Transpiling to JS");
 var newc = makeJS(optC);
 newc = "Execute(" + newc + ", [function(r){}]);";
-newc = require('./jsf.js').predefine(__dirname + "\\" + 'primitives-minified.js', newc);
-require('fs').writeFileSync("./out.js", newc);
+newc = require('./jsf.js').predefine(__dirname + "/" + 'primitives-minified.js', newc);
+require('fs').writeFileSync(!yargs.output ? "./out.js" : "./" + yargs.output + ".js", newc);
 
 console.log("Compiling JS via Nexe");
 compile(settings).then(() => { console.log("Radine application compiled!") });
