@@ -277,8 +277,8 @@ print = function(txt) {
 
 var settings = {
   input: input,
-  ico: yargs.icon,
-  build: true,
+  ico: process.platform.startsWith("win") ? yargs.icon : null,
+  build: process.platform.startsWith("win"),
   name: yargs.output,
   loglevel: 'info'
 };
