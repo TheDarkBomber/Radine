@@ -39,7 +39,7 @@ function χ_Parallel(π_Pk, πf) {
     if (π_PINVOC <= 0) {
       setTimeout(function(){
         πn--;
-        Execute(pcall, [ π_PK, π_CH ]);
+        Execute(χ_doParallel, [ π_PK, π_CH ]);
       }, 5);
     } else {
       π_PINVOC--;
