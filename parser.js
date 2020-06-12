@@ -525,6 +525,7 @@ class Parser {
   }
 
   parseSLE(tag) {
+    pthis.skipPunctuation(tag);
     var core = {
       type: "sle",
       tag: tag
