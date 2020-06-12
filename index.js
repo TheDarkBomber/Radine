@@ -4,7 +4,7 @@ const toCPS = require('./jsf.js').toCPS;
 const optimiseAST = require('./jsf.js').optimiseAST;
 
 const { compile } = require('nexe');
-const invocation = require('path').resolve('.') + "\\";
+const invocation = require('path').resolve('.') + "/";
 
 // var ithis;
 
