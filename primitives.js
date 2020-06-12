@@ -1,6 +1,7 @@
 var Stacklen;
 var πσ;
 var π_PSTACK = [];
+var π_PINVOC = 1000;
 function Execute(f, args) {
   while (true) try {
       Stacklen = 200;
@@ -28,6 +29,30 @@ function GotoPStack(f) {
   f(function π_GOTO(r){
     π_PSTACK.pop()(r);
   });
+}
+
+function χ_Parallel(π_Pk, πf) {
+  var πn = 0, πresult = [], πi = 0;
+  πf(function(){ if (πi == 0) π_Pk(false) }, χ_doParallel);
+  function χ_doParallel(π_PK, π_CH){
+    πn++;
+    if (π_PINVOC <= 0) {
+      setTimeout(function(){
+        πn--;
+        Execute(pcall, [ π_PK, π_CH ]);
+      }, 5);
+    } else {
+      π_PINVOC--;
+      var index = πi++;
+      π_CH(function(chunk){
+        π_PINVOC++;
+        πn--;
+        πresult[index] = chunk;
+        if (πn == 0) Execute(π_Pk, [ πresult ]);
+      });
+      π_PK(false);
+    }
+  };
 }
 
 print = function(k, txt) {

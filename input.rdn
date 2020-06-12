@@ -1,6 +1,19 @@
-foo = map {};
-foo["first"] = "bar";
-foo.second = "far";
+wpr = f(msg, timeout) {
+  wait(timeout);
+  print(msg);
+  msg;
+};
 
-print(foo.first);
-print(foo["second"]);
+print("Sequential");
+wpr("foo", 1000);
+wpr("bar", 500);
+wpr("far", 200);
+
+print("Parallel");
+endResult = parallel {
+  do wpr("foo", 1000);
+  do wpr("bar", 500);
+  do wpr("far", 200);
+};
+
+print(endResult); // prints the results of the parallel tasks in invocation order

@@ -37,7 +37,7 @@ class TStream {
   constructor(input) {
     this.input = input;
     this.current = null;
-    this.kw = " if then else function f true false local RAW arguments low indifferent high map declare ";
+    this.kw = " if then else function f true false local RAW arguments low indifferent high map declare parallel do ";
     this.αn = " root log match ";
     tthis = this;
   }
@@ -283,6 +283,8 @@ class Parser {
         return pthis.parseFunction();
       }
       if(pthis.keyword("RAW")) return pthis.parseRAW();
+      if(pthis.keyword("parallel")) return pthis.parseParallel(true);
+      if(pthis.keyword("do")) return pthis.parseParallel();
       if(pthis.punctuation("@")) return pthis.parseSLE("@");
       if(pthis.punctuation("$")) return pthis.parseSLE("$");
       if(pthis.punctuation("#")) return pthis.parseSLE("#");
@@ -523,8 +525,7 @@ class Parser {
   }
 
   parseSLE(tag) {
-    pthis.skipPunctuation(tag);
-    var core =  {
+    var core = {
       type: "sle",
       tag: tag
     };
@@ -533,7 +534,24 @@ class Parser {
       type: "call",
       method: core,
       args: [ arg ]
-    }
+    };
+  }
+
+  parseParallel(par) {
+    if (!par) pthis.skipKeyword("do");
+    else pthis.skipKeyword("parallel");
+    return {
+      type: "call",
+      method: {
+        type: "variable",
+        value: par ? "χ_Parallel" : "χ_doParallel"
+      },
+      args: [{
+        type: "function",
+        vars: par ? ["χ_doParallel"] : [],
+        body: pthis.parseExpression()
+      }]
+    };
   }
 
   parseDeclare() {
