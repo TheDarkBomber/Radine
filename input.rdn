@@ -11,3 +11,15 @@ foo = f: xret {
 print(foo());
 lul = true;
 foo();
+
+macro-env myEnv what {
+  macro-env#ARG what = f(ms) wait(ms);
+  macro-env#FUNC(macro-env#ARG what);
+};
+
+nasa = f: myEnv {
+  what 2500;
+  print("OK");
+};
+
+nasa();

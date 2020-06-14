@@ -37,7 +37,7 @@ class TStream {
   constructor(input) {
     this.input = input;
     this.current = null;
-    this.kw = " if then else function f true false local RAW arguments low indifferent high map declare parallel do macro-env macro-env#FUNC ";
+    this.kw = " if then else function f true false local RAW arguments low indifferent high map declare parallel do macro-env macro-env#FUNC macro-env#ARG ";
     this.αn = " root log match ";
     tthis = this;
   }
@@ -210,6 +210,7 @@ class Parser {
     };
     this.EnvMacros = [];
     this.MacroWords = " ";
+    this.MacroMode = false;
     pthis = this;
   }
 
@@ -288,6 +289,7 @@ class Parser {
       if(pthis.keyword("parallel")) return pthis.parseParallel(true);
       if(pthis.keyword("do")) return pthis.parseParallel();
       if(pthis.keyword("macro-env")) return pthis.parseNEnvMacro();
+      if(pthis.keyword("macro-env#ARG")) return pthis.parseEMArg();
       if(pthis.keyword("macro-env#FUNC")) {
         pthis.skipKeyword("macro-env#FUNC")
         return {
@@ -591,6 +593,7 @@ class Parser {
 
   parseNEnvMacro() {
     pthis.skipKeyword("macro-env");
+    pthis.MacroMode = true;
     var macroName = pthis.input.next();
     if (macroName.type !== "variable") pthis.input.exeunt("Unexpected " + macroName.type);
     var macroVar = pthis.input.next();
@@ -606,6 +609,7 @@ class Parser {
       type: "envarg",
       name: macroVar.value
     });
+    pthis.MacroMode = false;
     return {
       type: "assign",
       operator: "=",
@@ -650,6 +654,17 @@ class Parser {
         args: [ pthis.parseExpression() ]
       };
     }
+  }
+
+  parseEMArg() {
+    if (pthis.MacroMode) {
+      pthis.skipKeyword("macro-env#ARG");
+      var arg = pthis.parseVarnym();
+      return {
+        type: "variable",
+        value: `λa_${arg}`
+      };
+    } else pthis.input.exeunt("A macro is not being defined right now.");
   }
 
   parseDeclare() {
