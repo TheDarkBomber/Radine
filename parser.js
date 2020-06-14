@@ -37,7 +37,7 @@ class TStream {
   constructor(input) {
     this.input = input;
     this.current = null;
-    this.kw = " if then else function f true false local RAW arguments low indifferent high map declare parallel do ";
+    this.kw = " if then else function f true false local RAW arguments low indifferent high map declare parallel do macro-env macro-env#FUNC ";
     this.αn = " root log match ";
     tthis = this;
   }
@@ -208,6 +208,8 @@ class Parser {
       "*": 20, "/": 20, "%": 20,
       "^": 30, "root": 30, "log": 30
     };
+    this.EnvMacros = [];
+    this.MacroWords = " ";
     pthis = this;
   }
 
@@ -285,10 +287,19 @@ class Parser {
       if(pthis.keyword("RAW")) return pthis.parseRAW();
       if(pthis.keyword("parallel")) return pthis.parseParallel(true);
       if(pthis.keyword("do")) return pthis.parseParallel();
+      if(pthis.keyword("macro-env")) return pthis.parseNEnvMacro();
+      if(pthis.keyword("macro-env#FUNC")) {
+        pthis.skipKeyword("macro-env#FUNC")
+        return {
+          type: "variable",
+          value: "λmf"
+        };
+      }
       if(pthis.punctuation("@")) return pthis.parseSLE("@");
       if(pthis.punctuation("$")) return pthis.parseSLE("$");
       if(pthis.punctuation("#")) return pthis.parseSLE("#");
       var t = pthis.input.next();
+      if(pthis.macro(t, true)) return pthis.parseMacro(t.value);
       if(t.type == "variable" || t.type == "numerical" || t.type == "string" || t.type == "regex") return t;
       pthis.unexpected();
     });
@@ -379,6 +390,16 @@ class Parser {
     return t && t.type == "keyword" && (!c || t.value == c) && t;
   }
 
+  macro(c, h) {
+    var t = !h ? pthis.input.peek() : c;
+    return t && t.type == "variable" && pthis.MacroWords.indexOf(" " + t.value + " ") >= 0;
+  }
+
+  isMacro(c) {
+    var t = pthis.input.peek();
+    return t && t.type == "variable" && (!c || t.value == c) && t && pthis.MacroWords.indexOf(" " + t.value + " ") >= 0;
+  }
+
   op(c) {
     var t = pthis.input.peek();
     return t && t.type == "operator" && (!c || t.value == c) && t;
@@ -392,6 +413,11 @@ class Parser {
   skipKeyword(c) {
     if(pthis.keyword(c)) pthis.input.next();
     else pthis.input.exeunt("Expected keyword: " + c);
+  }
+
+  skipMacro(c) {
+    if(pthis.isMacro(c)) pthis.input.next();
+    else pthis.input.exeunt("Expected macro word: " + c);
   }
 
   resKeyword(c) {
@@ -553,6 +579,15 @@ class Parser {
         body: pthis.parseExpression()
       }]
     };
+  }
+
+        method: {
+          type: "variable",
+          value: `λa_${mx.name}`
+        },
+        args: [ pthis.parseExpression() ]
+      };
+    }
   }
 
   parseDeclare() {
