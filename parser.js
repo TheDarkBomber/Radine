@@ -581,6 +581,68 @@ class Parser {
     };
   }
 
+  getEnvMacro(mw) {
+    var macroX;
+    pthis.EnvMacros.forEach(e => {
+      if (e.name === mw) macroX = e;
+    });
+    return macroX;
+  }
+
+  parseNEnvMacro() {
+    pthis.skipKeyword("macro-env");
+    var macroName = pthis.input.next();
+    if (macroName.type !== "variable") pthis.input.exeunt("Unexpected " + macroName.type);
+    var macroVar = pthis.input.next();
+    if (macroVar.type !== "variable") pthis.input.exeunt("Unexpected " + macroVar.type);
+    var macroFunc = pthis.parseExpression();
+    pthis.MacroWords += `${macroName.value} ${macroVar.value} `;
+    pthis.EnvMacros.push({
+      type: "env",
+      name: macroName.value,
+      arg: macroVar.value
+    });
+    pthis.EnvMacros.push({
+      type: "envarg",
+      name: macroVar.value
+    });
+    return {
+      type: "assign",
+      operator: "=",
+      left: {
+        type: "variable",
+        value: `λ_${macroName.value}`
+      },
+      right: {
+        type: "function",
+        vars: ["λmf"],
+        body: macroFunc
+      }
+    };
+  }
+
+  parseMacro(macroWord) {
+    var mx = pthis.getEnvMacro(macroWord);
+    return pthis.parseEnvMacro(mx); // only type of macro atm
+  }
+
+  parseEnvMacro(mx) {
+    if (mx.type === "env") {
+      return {
+        type: "call",
+        method: {
+          type: "variable",
+          value: `λ_${mx.name}`
+        },
+        args: [{
+          type: "function",
+          vars: `λa_${mx.arg}`,
+          body: pthis.parseExpression()
+        }]
+      };
+    } else {
+      return {
+        type: "call",
         method: {
           type: "variable",
           value: `λa_${mx.name}`
