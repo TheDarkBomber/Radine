@@ -349,7 +349,7 @@ function makeJS(exp) {
     if (!exp.unguarded) {
       CC = exp.name || "π_CC";
       code += makeVar(CC);
-    }
+    } else if (exp.name) code += makeVar(exp.name);
     code += "(" + exp.vars.map(makeVar).join(", ") + ") {";
     if (exp.locs && exp.locs.length > 0) {
       code += "var " + exp.locs.join(", ") + ";";

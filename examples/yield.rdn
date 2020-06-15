@@ -1,13 +1,15 @@
 macro-env yieldFunction yield {
-	macro-env#ARG yield = f(val) {
-		$f(k) {
-			macro-env#FUNC = k;
-			val;
+	local (macro-env#ARG yield) {
+		macro-env#ARG yield = f(val) {
+			$f(k) {
+				macro-env#FUNC = k;
+				val;
+			};
 		};
-	};
 
-	f(val) {
-		#f: macro-env#FUNC(if macro-env#ARG yield then macro-env#ARG yield else val);
+		f(val) {
+			#f: macro-env#FUNC(if macro-env#ARG yield then macro-env#ARG yield else val);
+		};
 	};
 };
 
@@ -25,13 +27,11 @@ print(foo());
 
 wait(500);
 
-declare: fibLoop; // can't loop locally, global required
 fib = yieldFunction {
-	fibLoop = f(a, b) {
+	local loop (a = 1, b = 1) {
 		yield b;
-		fibLoop(b, a + b);
+		loop(b, a + b);
 	};
-	fibLoop(1, 1);
 };
 
 local loop (i = 0) if i < 50 {

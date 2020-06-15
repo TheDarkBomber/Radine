@@ -445,6 +445,7 @@ class Parser {
 
   parseVarnym() {
     var name = pthis.input.next();
+    if (pthis.MacroMode && name.type === "keyword" && name.value === "macro-env#ARG") name = pthis.input.next();
     if(name.type != "variable") pthis.input.exeunt("Expected variable name");
     return name.value;
   }
@@ -516,7 +517,7 @@ class Parser {
 
   parseLocal() {
     pthis.skipKeyword("local");
-    if(pthis.input.peek().type == "variable") {
+    if(pthis.input.peek().type === "variable") {
       var name = pthis.input.next().value;
       var defs = pthis.delimited("(", ")", ",", pthis.parseVardef);
       return {
