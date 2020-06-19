@@ -1,0 +1,51 @@
+// computes a reverse polish notation basic arithmetic expression
+
+forEach = f(list, m) {
+  local (n = length(list)) {
+    local loop(i = 0) {
+      if i < n then {
+        m(list[i], i);
+        loop(i + 1);
+      };
+    };
+  };
+};
+
+pop = f(sList) {
+	local (popped = sList.list[length(sList.list) - 1], nl = []) {
+		forEach(sList.list, f(e, i) {
+			if i != length(sList.list) - 1
+				then push(e, nl);
+		});
+		sList.edit(nl);
+		popped
+	};
+};
+
+getOp = f(op, a, b) {
+	if op == "+" then a + b
+	else if op == "-" then a - b
+	else if op == "*" then a * b
+	else if op == "/" then a / b
+	else exception("Unknown operator", "getOp Function");
+};
+
+computeRPN = f(exp) {
+	local (wstack = map {}, b, a) {
+		wstack.list = [];
+		wstack.edit = f(newList) wstack.list = newList;
+		
+		forEach(exp, f(e) {
+			if (e + "") match |[0-9]+| then push(e, wstack.list)
+			else {
+				b = pop(wstack) * 1;
+				a = pop(wstack) * 1;
+				push(getOp(e, a, b), wstack.list);
+			};
+		});
+		
+		wstack.list[0]
+	};
+};
+
+print(computeRPN([6, 1, 3, 4, "/", "-", "/"])); // output = 24
