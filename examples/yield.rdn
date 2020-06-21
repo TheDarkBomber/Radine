@@ -1,4 +1,4 @@
-macro-env yieldFunction yield {
+macro-env yieldFunction: yield {
 	local (macro-env#ARG yield) {
 		macro-env#ARG yield = f(val) {
 			$f(k) {
