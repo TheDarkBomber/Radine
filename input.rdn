@@ -1,25 +1,18 @@
-macro-env xret return @(macro-env#FUNC);
-
-declare: lul;
-
-foo = f: xret {
-  print("foo");
-  if !lul then return "bar";
-  print("far"); // never reached if lul is false
+macro-env fooBar [foo, bar] {
+  macro-env#HYG fbIntn = 0;
+  macro-env#ARG foo = f(val) macro-env#HYG fbIntn = (val + 1);
+  macro-env#ARG bar = f(valdec) {
+    macro-env#HYG fbIntrn = macro-env#HYG fbIntrn - valdec;
+    macro-env#HYG fbIntrn;
+  };
+  macro-env#FUNC(macro-env#ARG foo, macro-env#ARG bar);
 };
 
-print(foo());
-lul = true;
-foo();
 
-macro-env myEnv what {
-  macro-env#ARG what = f(ms) wait(ms);
-  macro-env#FUNC(macro-env#ARG what);
+lul = fooBar {
+  print("foo. bar. is. fun.");
+  foo 5;
+  print(bar 4); // prints 2
 };
 
-nasa = f: myEnv {
-  what 2500;
-  print("OK");
-};
-
-nasa();
+lul();

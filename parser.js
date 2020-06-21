@@ -37,7 +37,7 @@ class TStream {
   constructor(input) {
     this.input = input;
     this.current = null;
-    this.kw = " if then else function f true false local RAW arguments low indifferent high map declare parallel do macro-env macro-env#FUNC macro-env#ARG ";
+    this.kw = " if then else function f true false local RAW arguments low indifferent high map declare parallel do macro-env macro-env#FUNC macro-env#ARG macro-env#HYG ";
     this.αn = " root log match ";
     tthis = this;
   }
@@ -289,7 +289,8 @@ class Parser {
       if(pthis.keyword("parallel")) return pthis.parseParallel(true);
       if(pthis.keyword("do")) return pthis.parseParallel();
       if(pthis.keyword("macro-env")) return pthis.parseNEnvMacro();
-      if(pthis.keyword("macro-env#ARG")) return pthis.parseEMArg();
+      if(pthis.keyword("macro-env#ARG")) return pthis.parseEMHyg("a");
+      if(pthis.keyword("macro-env#HYG")) return pthis.parseEMHyg("h");
       if(pthis.keyword("macro-env#FUNC")) {
         pthis.skipKeyword("macro-env#FUNC")
         return {
@@ -443,9 +444,26 @@ class Parser {
     pthis.input.exeunt("Unexpected token: " + JSON.stringify(pthis.input.peek()));
   }
 
+  macroHygCheck(chk) {
+    if (chk.type === "variable") return;
+    if (chk.type !== "keyword") pthis.input.exeunt("Expected keyword or variable name");
+    switch (chk.value) {
+      case "macro-env#ARG": return "a";
+      case "macro-env#HYG": return "h";
+      default: pthis.input.exeunt("Expected keyword that indicates macro hygiene");
+    }
+  }
+
   parseVarnym() {
     var name = pthis.input.next();
-    if (pthis.MacroMode && name.type === "keyword" && name.value === "macro-env#ARG") name = pthis.input.next();
+    var hygpre;
+    if (pthis.MacroMode) {
+      hygpre = pthis.macroHygCheck(name);
+      if (hygpre) {
+         name = pthis.input.next();
+         name.value = `λ${hygpre}_${name.value}`;
+      }
+    }
     if(name.type != "variable") pthis.input.exeunt("Expected variable name");
     return name.value;
   }
@@ -657,13 +675,13 @@ class Parser {
     }
   }
 
-  parseEMArg() {
+  parseEMHyg(prefix) {
     if (pthis.MacroMode) {
-      pthis.skipKeyword("macro-env#ARG");
+      pthis.resKeyword(["macro-env#ARG", "macro-env#HYG"]);
       var arg = pthis.parseVarnym();
       return {
         type: "variable",
-        value: `λa_${arg}`
+        value: `λ${prefix}_${arg}`
       };
     } else pthis.input.exeunt("A macro is not being defined right now.");
   }
