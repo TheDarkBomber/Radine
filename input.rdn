@@ -1,11 +1,12 @@
 macro-env fooBar [foo, bar] {
-  macro-env#HYG fbIntn = 0;
-  macro-env#ARG foo = f(val) macro-env#HYG fbIntn = (val + 1);
-  macro-env#ARG bar = f(valdec) {
-    macro-env#HYG fbIntrn = macro-env#HYG fbIntrn - valdec;
-    macro-env#HYG fbIntrn;
+  local (macro-env#HYG fbIntn = 0) {
+    macro-env#ARG foo = f(val) macro-env#HYG fbIntn = val + 1;
+    macro-env#ARG bar = f(valdec) {
+      macro-env#HYG fbIntn = macro-env#HYG fbIntn - valdec;
+      macro-env#HYG fbIntn;
+    };
+    f: macro-env#FUNC(macro-env#ARG foo, macro-env#ARG bar);
   };
-  macro-env#FUNC(macro-env#ARG foo, macro-env#ARG bar);
 };
 
 

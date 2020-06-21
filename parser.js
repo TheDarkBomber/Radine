@@ -612,21 +612,29 @@ class Parser {
 
   parseNEnvMacro() {
     pthis.skipKeyword("macro-env");
-    pthis.MacroMode = true;
     var macroName = pthis.input.next();
     if (macroName.type !== "variable") pthis.input.exeunt("Unexpected " + macroName.type);
-    var macroVar = pthis.input.next();
-    if (macroVar.type !== "variable") pthis.input.exeunt("Unexpected " + macroVar.type);
+    pthis.MacroWords += `${macroName.value} `;
+    var macroVars;
+    if (pthis.punctuation(":")) {
+      pthis.skipPunctuation(":");
+      macroVars = pthis.input.next();
+      if (macroVars.type !== "variable") pthis.input.exeunt("Unexpected " + macroVar.type);
+      macroVars = [ macroVars.value ];
+    } else macroVars = pthis.delimited("[", "]", ",", pthis.parseVarnym);
+    pthis.MacroMode = true;
+    macroVars.forEach(e => {
+      pthis.MacroWords += `${e} `;
+      pthis.EnvMacros.push({
+        type: "envarg",
+        name: e
+      });
+    });
     var macroFunc = pthis.parseExpression();
-    pthis.MacroWords += `${macroName.value} ${macroVar.value} `;
     pthis.EnvMacros.push({
       type: "env",
       name: macroName.value,
-      arg: macroVar.value
-    });
-    pthis.EnvMacros.push({
-      type: "envarg",
-      name: macroVar.value
+      args: macroVars
     });
     pthis.MacroMode = false;
     return {
@@ -651,6 +659,10 @@ class Parser {
 
   parseEnvMacro(mx) {
     if (mx.type === "env") {
+      var mvs = [];
+      mx.args.forEach(e => {
+        mvs.push(`λa_${e}`);
+      });
       return {
         type: "call",
         method: {
@@ -659,7 +671,7 @@ class Parser {
         },
         args: [{
           type: "function",
-          vars: `λa_${mx.arg}`,
+          vars: mvs,
           body: pthis.parseExpression()
         }]
       };
