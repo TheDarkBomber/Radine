@@ -749,6 +749,7 @@ class Parser {
 
 function Link(exp) {
   exp = JSON.stringify(exp);
+  var seen = [];
   while (/.*{"ΑΑΑ":".*","ΣΣΣ":"ΑΑΑ"}.*/.test(exp)) {
     var ox = exp;
     exp = exp.split("ΑΑΑ")[1];
@@ -757,11 +758,14 @@ function Link(exp) {
     exp = exp.replace(/\\t/g, '\t');
     exp = exp.replace(/\\n/g, '\n');
     exp = exp.replace(/\\(.)/g, '$1');
-    let cs = new CStream(exp);
-    let ts = new TStream(cs);
-    let ps = new Parser(ts).parseKern();
-    ps = JSON.stringify(ps);
-    ox = ox.replace(/{"ΑΑΑ":".*?(?=","ΣΣΣ":"ΑΑΑ")","ΣΣΣ":"ΑΑΑ"}/, ps);
+    if(!seen.includes(exp)) {
+      seen.push(exp);
+      let cs = new CStream(exp);
+      let ts = new TStream(cs);
+      let ps = new Parser(ts).parseKern();
+      ps = JSON.stringify(ps);
+      ox = ox.replace(/{"ΑΑΑ":".*?(?=","ΣΣΣ":"ΑΑΑ")","ΣΣΣ":"ΑΑΑ"}/, ps);
+    } else ox = ox.replace(/{"ΑΑΑ":".*?(?=","ΣΣΣ":"ΑΑΑ")","ΣΣΣ":"ΑΑΑ"}/, '{}');
     exp = ox;
   }
   return JSON.parse(exp);
