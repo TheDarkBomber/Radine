@@ -1,1 +1,2 @@
+LINK <"examples/lib/other-math">;
 add = function(x, y) x + y;

@@ -1,5 +1,4 @@
 LINK <"examples/lib/math">;
-LINK <"examples/lib/other-math">;
 
 print(add(2, 3));
 print(sub(5, 2));

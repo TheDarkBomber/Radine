@@ -756,6 +756,7 @@ function Link(exp) {
     exp = exp.replace(/\\r/g, '\r');
     exp = exp.replace(/\\t/g, '\t');
     exp = exp.replace(/\\n/g, '\n');
+    exp = exp.replace(/\\(.)/g, '$1');
     let cs = new CStream(exp);
     let ts = new TStream(cs);
     let ps = new Parser(ts).parseKern();
