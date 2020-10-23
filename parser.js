@@ -37,7 +37,7 @@ class TStream {
   constructor(input) {
     this.input = input;
     this.current = null;
-    this.kw = " if then else function f true false local RAW arguments low indifferent high map declare parallel do macro-env macro-env#FUNC macro-env#ARG macro-env#HYG ";
+    this.kw = " if then else function f true false local RAW arguments low indifferent high map declare parallel do macro-env macro-env#FUNC macro-env#ARG macro-env#HYG LINK ";
     this.αn = " root log match ";
     tthis = this;
   }
@@ -291,6 +291,7 @@ class Parser {
       if(pthis.keyword("macro-env")) return pthis.parseNEnvMacro();
       if(pthis.keyword("macro-env#ARG")) return pthis.parseEMHyg("a");
       if(pthis.keyword("macro-env#HYG")) return pthis.parseEMHyg("h");
+      if(pthis.keyword("LINK")) return pthis.link();
       if(pthis.keyword("macro-env#FUNC")) {
         pthis.skipKeyword("macro-env#FUNC")
         return {
@@ -731,10 +732,43 @@ class Parser {
       code: pthis.input.next().value
     };
   }
+
+  link() {
+    pthis.skipKeyword("LINK");
+    pthis.skipOp("<");
+    if (pthis.input.peek().type != "string") pthis.input.exeunt("LINK only accepts raw strings as input");
+    var ls = pthis.input.next().value;
+    pthis.skipOp(">");
+    var x = require('fs').readFileSync('./' + ls + '.rdn').toString();
+    return {
+      "ΑΑΑ": x,
+      "ΣΣΣ": "ΑΑΑ"
+    };
+  }
+}
+
+function Link(exp) {
+  exp = JSON.stringify(exp);
+  while (/.*{"ΑΑΑ":".*","ΣΣΣ":"ΑΑΑ"}.*/.test(exp)) {
+    var ox = exp;
+    exp = exp.split("ΑΑΑ")[1];
+    exp = exp.substring(3, exp.length - 9);
+    exp = exp.replace(/\\r/g, '\r');
+    exp = exp.replace(/\\t/g, '\t');
+    exp = exp.replace(/\\n/g, '\n');
+    let cs = new CStream(exp);
+    let ts = new TStream(cs);
+    let ps = new Parser(ts).parseKern();
+    ps = JSON.stringify(ps);
+    ox = ox.replace(/{"ΑΑΑ":".*?(?=","ΣΣΣ":"ΑΑΑ")","ΣΣΣ":"ΑΑΑ"}/, ps);
+    exp = ox;
+  }
+  return JSON.parse(exp);
 }
 
 module.exports = {
   CStream: CStream,
   TStream: TStream,
-  Parser: Parser
+  Parser: Parser,
+  Link: Link
 }

@@ -285,6 +285,7 @@ var settings = {
 
 console.log("Generating AST");
 var AST = new RParser.Parser(new RParser.TStream(new RParser.CStream(data))).parseKern();
+AST = RParser.Link(AST);
 // require('fs').writeFileSync("./ast.json", JSON.stringify(AST));
 console.log("Transforming AST");
 var CPS = toCPS(AST, function(x){return x});

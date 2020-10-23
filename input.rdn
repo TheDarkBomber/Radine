@@ -1,19 +1,5 @@
-macro-env fooBar [foo, bar] {
-  local (macro-env#HYG fbIntn = 0) {
-    macro-env#ARG foo = f(val) macro-env#HYG fbIntn = val + 1;
-    macro-env#ARG bar = f(valdec) {
-      macro-env#HYG fbIntn = macro-env#HYG fbIntn - valdec;
-      macro-env#HYG fbIntn;
-    };
-    f: macro-env#FUNC(macro-env#ARG foo, macro-env#ARG bar);
-  };
-};
+LINK <"examples/lib/math">;
+LINK <"examples/lib/other-math">;
 
-
-lul = fooBar {
-  print("foo. bar. is. fun.");
-  foo 5;
-  print(bar 4); // prints 2
-};
-
-lul();
+print(add(2, 3));
+print(sub(5, 2));
