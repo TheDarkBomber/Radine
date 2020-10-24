@@ -1,2 +1,2 @@
-LINK <"examples/lib/other-math">;
+LINK <"lib:other-math">;
 add = function(x, y) x + y;

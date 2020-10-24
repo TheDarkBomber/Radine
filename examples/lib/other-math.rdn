@@ -1,2 +1,2 @@
-LINK <"examples/lib/math">;
+LINK <"lib:math">;
 sub = function (x, y) x - y;

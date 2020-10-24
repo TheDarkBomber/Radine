@@ -739,7 +739,14 @@ class Parser {
     if (pthis.input.peek().type != "string") pthis.input.exeunt("LINK only accepts raw strings as input");
     var ls = pthis.input.next().value;
     pthis.skipOp(">");
-    var x = require('fs').readFileSync('./' + ls + '.rdn').toString();
+    if (ls.startsWith("lib:")) {
+      ls = ls.replace(/^lib:/, "");
+      ls = `${require('./config.json').library}/${ls}.rdn`;
+    } else if (ls.startsWith("abs:")) {
+      ls = ls.replace(/^abs:/, "");
+      ls = `${ls}.rdn`;
+    } else ls = `./${ls}.rdn`;
+    var x = require('fs').readFileSync(ls).toString();
     return {
       "ΑΑΑ": x,
       "ΣΣΣ": "ΑΑΑ"

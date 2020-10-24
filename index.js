@@ -227,6 +227,10 @@ var yargs = require('yargs').options({
     default: __dirname + "\\" + 'radine.ico',
     describe: 'Icon to apply to file if possible. (WINDOWS ONLY)',
     type: 'string'
+  }, 'reset-lib': {
+    alias: 'change-lib',
+    describe: 'Passing this flag will allow the user to change the path where their libraries are stored. This will change the path until this flag is either passed again or the entry in the configuration file is modified manually.',
+    type: 'boolean'
   }
 }).help().argv;
 
@@ -282,6 +286,20 @@ var settings = {
   name: yargs.output,
   loglevel: 'info'
 };
+
+var config = require('./config.json');
+const read = require('readline-sync');
+
+
+if (!config) {
+  console.log("config.json missing");
+  process.exit(10);
+} else if (!config.library || yargs["reset-lib"]) {
+  console.log("Please set path to library.\nThe library can be reset by passing the flag --reset-lib");
+  config.library = read.question('> ');
+  console.log("\n");
+  require('fs').writeFileSync("./config.json", JSON.stringify(config, null, 2));
+}
 
 console.log("Generating AST");
 var AST = new RParser.Parser(new RParser.TStream(new RParser.CStream(data))).parseKern();
