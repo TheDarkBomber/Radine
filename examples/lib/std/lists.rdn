@@ -1,0 +1,15 @@
+forEach = function (list, fn) {
+  local (n = length(list))
+    local loop (i = 0) if i < n then {
+        fn(list[i], i);
+        loop(i + 1);
+    }
+};
+
+mapfn = function (list, fn) {
+  local (n = length(list), o = list)
+    local loop (i = 0) if i < n then {
+        o[i] = fn(list[i], i);
+        loop(i + 1);
+    } else o;
+};

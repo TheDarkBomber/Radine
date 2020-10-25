@@ -1,6 +1,16 @@
-LINK <"lib:math">;
+LINK <"lib:std">;
+rng = ImportJS("Math.random");
+print(rng());
+print(rng());
 
-NaN = add(2, 3);
-const = sub(5, 2);
-print(NaN);
-print(const);
+x = [1, 2, 3, 4];
+x = mapfn(x, f(e) e ^ 2);
+print(x);
+forEach(x, f(e) print(e + 1));
+
+print(math.floor(7.6));
+print(math.ceiling(7.6));
+print(math.floor(rng() * 3));
+print(math.floor(rng() * 7));
+print(math.ceiling(rng() * 12));
+print(math.ceiling(rng() * 4));

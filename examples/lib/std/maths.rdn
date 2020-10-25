@@ -1,0 +1,7 @@
+math = map {};
+math.floor = function (num) {
+  ((num * 2) - ((num * 2) % 2))/2;
+};
+math.ceiling = function (num) {
+  (math.floor(num)) + 1;
+};
