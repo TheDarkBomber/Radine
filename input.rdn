@@ -1,4 +1,6 @@
 LINK <"lib:math">;
 
-print(add(2, 3));
-print(sub(5, 2));
+NaN = add(2, 3);
+const = sub(5, 2);
+print(NaN);
+print(const);

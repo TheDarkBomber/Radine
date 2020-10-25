@@ -230,6 +230,7 @@ function sideFX(exp) {
   }
   return true;
 }
+const forbiddenNames = ["await", "break", "case", "catch", "class", "const", "continue", "debugger", "default", "delete", "do", "else", "enum", "export", "extends", "false", "finally", "for", "function", "if", "implements", "import", "in", "instanceof", "interface", "let", "new", "null", "package", "private", "protected", "public", "return", "super", "switch", "static", "this", "throw", "try", "True", "typeof", "var", "void", "while", "with", "yield", "Continuation", "Execute", "Shield", "GotoPStack", "Stacklen", "Infinity", "NaN", "undefined", "globalThis", "eval", "isFinite", "isNaN", "parseFloat", "parseInt", "encodeURI", "encodeURIComponent", "decodeURI", "decodeURIComponent", "Object", "Function", "Boolean", "Symbol", "Error", "AggregateError", "EvalError", "InternalError", "RangeError", "ReferenceError", "SyntaxError", "TypeError", "URIError", "Number", "BigInt", "Math", "Date", "String", "RegExp", "Array", "Int8Array", "Uint8Array", "Uint8ClampedArray", "Int16Array", "Uint16Array", "Int32Array", "Uint32Array", "Float32Array", "Float64Array", "BigInt64Array", "BigUint64Array", "Map", "Set", "WeakMap", "WeakSet", "ArrayBuffer", "SharedArrayBuffer", "Atomics", "DataView", "JSON", "Promise", "Generator", "GeneratorFunction", "AsyncFunction", "AsyncGenerator", "AsyncGeneratorFunction", "Reflect", "Proxy", "Intl", "WebAssembly", "AbortController", "Buffer", "__dirname", "__filename", "clearImmediate", "clearInterval", "clearTimeout", "console", "Event", "EventTarget", "exports", "global", "MessageChannel", "MessageEvent", "MessagePort", "module", "process", "queueMicrotask", "require", "setImmediate", "setInterval", "setTimeout", "TextDecoder", "TextEncoder", "URL", "URLSearchParams"];
 
 // Input: Radine AST
 // Output: Raw JS
@@ -291,22 +292,8 @@ function makeJS(exp) {
   }
 
   function makeVar(name) {
-    switch(name) {
-      case "while": return "γ_while";
-      case "for": return "γ_for";
-      case "continue": return "γ_continue";
-      case "return": return "γ_return";
-      case "try": return "γ_try";
-      case "catch": return "γ_catch";
-      case "throw": return "γ_throw";
-      case "new": return "γ_new";
-      case "Shield": return "γ_Shield";
-      case "Continuation": return "γ_Continuation";
-      case "Execute": return "γ_Execute";
-      case "GotoPStack": return "γ_GotoPStack";
-      case "class": return "γ_class";
-    }
-    return name.replace("@", "ΓAT").replace("~", "ΓTD").replace("=", "ΓEQ").replace("<", "ΓLT").replace(">", "ΓGT").replace("-", "ΓHY").replace("#", "ΓHT");
+    if (forbiddenNames.includes(name)) return `γ_${name}`;
+    return name.replace(/@/g, "ΓAT").replace(/~/g, "ΓTD").replace(/=/g, "ΓEQ").replace(/</g, "ΓLT").replace(/>/g, "ΓGT").replace(/-/g, "ΓHY").replace(/#/g, "ΓHT");
   }
   function VarJS(exp) {
     return makeVar(exp.value);
