@@ -1,6 +1,25 @@
-macro-proc example(a, b) {
-  a += b;
-};
-foo = 2;
-example(foo, 3); // expands to foo = foo + 3;
-print(foo); // prints 5
+macro-proc :for(iterator, condition, postaction, code) `{
+  local loop(iterator) if condition {
+    code
+    loop(postaction);
+  };
+}';
+
+for(`i = 0', `i < 7', `i + 1', `{
+  print(i);
+}');
+
+for(`i = 0', `i < 10', `i + 1', `{
+  macro-proc :for(iterator, condition, postaction, code) `{
+    local loop(iterator) if condition {
+      code
+      loop(postaction);
+    };
+  }';
+
+  for(`j = 0', `j < 10', `j + 1', `{
+    write(i);
+    write(", ");
+    print(j);
+  }');
+}');

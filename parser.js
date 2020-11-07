@@ -39,10 +39,15 @@ class TStream {
     this.current = null;
     this.kw = " if then else function f true false local RAW arguments low indifferent high map declare parallel do macro-env macro-env#FUNC macro-env#ARG macro-env#HYG macro-proc LINK ";
     this.αn = " root log match ";
+    this.pr = this.input.input ? false : true;
     tthis = this;
   }
 
   readNext() {
+    if (tthis.pr) {
+      if (tthis.input != []) return tthis.input.shift();
+      else return null;
+    }
     tthis.readWhilst(tthis.whitespace);
     if(tthis.input.eof()) return null;
     var ch = tthis.input.peek();
@@ -94,7 +99,7 @@ class TStream {
   }
 
   punctuation(c) {
-     return ".,:;(){}[]@$#".indexOf(c) >= 0;
+     return ".,:;(){}[]@$#`'".indexOf(c) >= 0;
   }
 
   whitespace(c) {
@@ -189,7 +194,7 @@ class TStream {
   }
 
   exeunt(msg) {
-      tthis.input.exeunt(msg);
+      !tthis.pr ? tthis.input.exeunt(msg) : console.log(`(WARN) ${msg}`);
   }
 }
 
@@ -213,6 +218,7 @@ class Parser {
     };
     this.EnvMacros = [];
     this.ProcMacros = [];
+    this.TokenProcMacros = {};
     this.MacroWords = " ";
     this.MacroMode = false;
     pthis = this;
@@ -236,7 +242,9 @@ class Parser {
     pthis.skipPunctuation(start);
     while(!pthis.input.eof()) {
       if (pthis.punctuation(stop)) break;
-      if (first) first = false; else pthis.skipPunctuation(separator);
+      if (first) first = false;
+      else if (separator) pthis.skipPunctuation(separator);
+      else pthis.input.next();
       if (pthis.punctuation(stop)) break;
       a.push(parser());
     }
@@ -335,11 +343,32 @@ class Parser {
   }
 
   parseMacroRef(macro) {
+    var t = pthis.TokenProcMacros[macro.value];
     return {
       type: "macro-ref",
       macro: macro.value,
-      args: pthis.delimited("(", ")", ",", pthis.parseExpression)
+      args: pthis.delimited("(", ")", ",", t ? pthis.readTokens : pthis.parseExpression)
     };
+  }
+
+  readTokens() {
+    var i = 0;
+    var a = [];
+    var first = true;
+    pthis.skipPunctuation("`");
+    while(!pthis.input.eof()) {
+      if (first) {
+        a.push(pthis.input.peek());
+        first = false;
+      }
+      if (pthis.punctuation("'") && i != 0) i -= 1;
+      if (pthis.punctuation("`")) i += 1;
+      pthis.input.next();
+      if (pthis.punctuation("'") && i == 0) break;
+      a.push(pthis.input.peek());
+    }
+    pthis.skipPunctuation("'");
+    return a;
   }
 
   parseIndex(list) {
@@ -747,13 +776,20 @@ class Parser {
 
   parseMacroProc() {
     pthis.skipKeyword("macro-proc");
+    var t = false;
+    if (pthis.punctuation(':')) {
+      pthis.skipPunctuation(':');
+      t = true;
+    }
     var name = pthis.parseVarnym();
     pthis.ProcMacros.push(name);
+    pthis.TokenProcMacros[name] = t;
     return {
       type: "macro-proc",
       name: name,
       vars: pthis.delimited("(", ")", ",", pthis.parseVarnym),
-      body: pthis.parseExpression()
+      token: t,
+      body: t ? pthis.readTokens() : pthis.parseExpression()
     };
   }
 
