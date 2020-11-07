@@ -37,7 +37,7 @@ class TStream {
   constructor(input) {
     this.input = input;
     this.current = null;
-    this.kw = " if then else function f true false local RAW arguments low indifferent high map declare parallel do macro-env macro-env#FUNC macro-env#ARG macro-env#HYG LINK ";
+    this.kw = " if then else function f true false local RAW arguments low indifferent high map declare parallel do macro-env macro-env#FUNC macro-env#ARG macro-env#HYG macro-proc LINK ";
     this.αn = " root log match ";
     tthis = this;
   }
@@ -212,6 +212,7 @@ class Parser {
       "^": 30, "root": 30, "log": 30
     };
     this.EnvMacros = [];
+    this.ProcMacros = [];
     this.MacroWords = " ";
     this.MacroMode = false;
     pthis = this;
@@ -294,6 +295,7 @@ class Parser {
       if(pthis.keyword("macro-env")) return pthis.parseNEnvMacro();
       if(pthis.keyword("macro-env#ARG")) return pthis.parseEMHyg("a");
       if(pthis.keyword("macro-env#HYG")) return pthis.parseEMHyg("h");
+      if(pthis.keyword("macro-proc")) return pthis.parseMacroProc();
       if(pthis.keyword("LINK")) return pthis.link();
       if(pthis.keyword("macro-env#FUNC")) {
         pthis.skipKeyword("macro-env#FUNC")
@@ -324,9 +326,18 @@ class Parser {
   }
 
   parseCall(method) {
+    if (method.type === "variable" && pthis.ProcMacros.includes(method.value)) return pthis.parseMacroRef(method);
     return {
       type: "call",
       method: method,
+      args: pthis.delimited("(", ")", ",", pthis.parseExpression)
+    };
+  }
+
+  parseMacroRef(macro) {
+    return {
+      type: "macro-ref",
+      macro: macro.value,
       args: pthis.delimited("(", ")", ",", pthis.parseExpression)
     };
   }
@@ -731,6 +742,18 @@ class Parser {
     return {
       type: "block",
       block: itemsF
+    };
+  }
+
+  parseMacroProc() {
+    pthis.skipKeyword("macro-proc");
+    var name = pthis.parseVarnym();
+    pthis.ProcMacros.push(name);
+    return {
+      type: "macro-proc",
+      name: name,
+      vars: pthis.delimited("(", ")", ",", pthis.parseVarnym),
+      body: pthis.parseExpression()
     };
   }
 

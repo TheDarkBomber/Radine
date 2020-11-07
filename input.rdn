@@ -1,7 +1,6 @@
-foo = 1; print(foo);
-foo += 1; print(foo);
-foo ^= 4; print(foo);
-foo *= 2; print(foo);
-foo /= 8; print(foo);
-foo -= 3; print(foo);
-foo %= 1; print(foo);
+macro-proc example(a, b) {
+  a += b;
+};
+foo = 2;
+example(foo, 3); // expands to foo = foo + 3;
+print(foo); // prints 5

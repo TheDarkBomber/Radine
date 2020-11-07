@@ -93,6 +93,8 @@ function makeScope(exp) {
       case "array":
       case "trilean":
       case "sle":
+      case "macro-proc":
+      case "macro-ref":
       case "boolean": break;
 
       case "variable":
@@ -187,6 +189,8 @@ function sideFX(exp) {
     case "call":
     case "raw":
     case "sle":
+    case "macro-proc":
+    case "macro-ref":
     case "assign": return true;
 
     case undefined:
@@ -231,10 +235,13 @@ function sideFX(exp) {
   return true;
 }
 const forbiddenNames = ["await", "break", "case", "catch", "class", "const", "continue", "debugger", "default", "delete", "do", "else", "enum", "export", "extends", "false", "finally", "for", "function", "if", "implements", "import", "in", "instanceof", "interface", "let", "new", "null", "package", "private", "protected", "public", "return", "super", "switch", "static", "this", "throw", "try", "True", "typeof", "var", "void", "while", "with", "yield", "Continuation", "Execute", "Shield", "GotoPStack", "Stacklen", "Infinity", "NaN", "undefined", "globalThis", "eval", "isFinite", "isNaN", "parseFloat", "parseInt", "encodeURI", "encodeURIComponent", "decodeURI", "decodeURIComponent", "Object", "Function", "Boolean", "Symbol", "Error", "AggregateError", "EvalError", "InternalError", "RangeError", "ReferenceError", "SyntaxError", "TypeError", "URIError", "Number", "BigInt", "Math", "Date", "String", "RegExp", "Array", "Int8Array", "Uint8Array", "Uint8ClampedArray", "Int16Array", "Uint16Array", "Int32Array", "Uint32Array", "Float32Array", "Float64Array", "BigInt64Array", "BigUint64Array", "Map", "Set", "WeakMap", "WeakSet", "ArrayBuffer", "SharedArrayBuffer", "Atomics", "DataView", "JSON", "Promise", "Generator", "GeneratorFunction", "AsyncFunction", "AsyncGenerator", "AsyncGeneratorFunction", "Reflect", "Proxy", "Intl", "WebAssembly", "AbortController", "Buffer", "__dirname", "__filename", "clearImmediate", "clearInterval", "clearTimeout", "console", "Event", "EventTarget", "exports", "global", "MessageChannel", "MessageEvent", "MessagePort", "module", "process", "queueMicrotask", "require", "setImmediate", "setInterval", "setTimeout", "TextDecoder", "TextEncoder", "URL", "URLSearchParams"];
+const Parser = require('./parser.js').Parser;
 
 // Input: Radine AST
 // Output: Raw JS
 function makeJS(exp) {
+  var macros = {};
+  var macroVars = {};
   return (new Function("π_KERNEL", JS(exp))).toString();
 
   function JS(exp) {
@@ -259,6 +266,8 @@ function makeJS(exp) {
       case "index": return IndexJS(exp);
       case "raw": return RawJS(exp);
       case "negate": return NegateJS(exp);
+      case "macro-proc": return MacroJS(exp);
+      case "macro-ref": return CallMacroJS(exp);
       default:
         throw new Error("Unable to compose JS for " + JSON.stringify(exp));
     }
@@ -425,6 +434,31 @@ function makeJS(exp) {
     if (booleanRes(exp.body)) return "!" + JS(exp.body);
     return "(" +  JS(exp.body) + " === false)";
   }
+
+  function MacroJS(exp) {
+    let AST = exp.body;
+    macros[exp.name] = AST;
+    macroVars[exp.name] = exp.vars;
+    return JS(False);
+  }
+
+  function isMacroVar(varnym, macro) {
+    return macroVars[macro].includes(varnym);
+  }
+
+  function CallMacroJS(exp) {
+    let AST = macros[exp.macro];
+    AST = JSON.stringify(AST);
+    let matches = AST.match(/{"type":"variable","value":"(.+?(?="))"}/g) || [];
+    matches.forEach((e, i) => {
+      let match = e.match(/{"type":"variable","value":"(.+?(?="))"}/)[1];
+      if (isMacroVar(match, exp.macro)) matches[i] = JSON.stringify(exp.args[macroVars[exp.macro].indexOf(match)]);
+    });
+    AST = AST.replace(/{"type":"variable","value":"(.+?(?="))"}/g, () => matches.shift());
+    AST = JSON.parse(AST);
+    let code = optimiseAST(toCPS(AST, function(x){return x;}));
+    return JS(code);
+  }
 }
 
 // Input: Radine AST
@@ -442,6 +476,8 @@ function toCPS(exp, k) {
       case "regex":
       case "array":
       case "sle":
+      case "macro-proc":
+      case "macro-ref":
       case "variable": return cpsAtom(exp, k);
 
       case "assign": return cpsAssign(exp, k);
@@ -672,6 +708,8 @@ function optimiseAST(exp) {
       case "raw":
       case "array":
       case "sle":
+      case "macro-proc":
+      case "macro-ref":
       case "variable": return exp;
       case "spread": return optimalSpread(exp);
       case "index": return optimalIndex(exp);
