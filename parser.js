@@ -204,8 +204,11 @@ class Parser {
       "match": 4,
       "<=>": 6, "<?": 6, ">?": 6,
       "<": 7, ">": 7, "<=": 7, ">=": 7, "==": 7, "!=": 7,
+      "+=": 9, "-=": 9,
       "+": 10, "-": 10,
+      "*=": 19, "/=": 19, "%=": 19,
       "*": 20, "/": 20, "%": 20,
+      "^=": 29,
       "^": 30, "root": 30, "log": 30
     };
     this.EnvMacros = [];
@@ -361,7 +364,8 @@ class Parser {
   }
 
   decideAssignment(opSymbol) {
-    if (opSymbol.charAt(0) === "=" && opSymbol.charAt(1) !== "=") return true;
+    if (opSymbol.charAt(0) === "=" && opSymbol.charAt(1) !== "=") return 1;
+    else if (/^[+\-*/^%].$/.test(opSymbol)) return 2;
     else return false;
   }
 
@@ -372,11 +376,17 @@ class Parser {
       if(oPrec > prec) {
         pthis.input.next();
         var right = pthis.expectBin(pthis.parseAtom(), oPrec);
+        var assign = pthis.decideAssignment(t.value);
         var binary = {
-          type: pthis.decideAssignment(t.value) ? "assign" : "binary",
-          operator: t.value,
+          type: assign ? "assign" : "binary",
+          operator: assign === 2 ? "=" : t.value,
           left: left,
-          right: right
+          right: assign === 2 ? {
+            type: "binary",
+            operator: t.value.charAt(0),
+            left: left,
+            right: right
+          } : right
         };
         return pthis.expectBin(binary, prec);
       }
