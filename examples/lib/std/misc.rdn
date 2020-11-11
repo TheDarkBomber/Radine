@@ -1,3 +1,8 @@
 ImportJS = function (JSFunc) {
     (RAW "eval").call("ImportJS.arguments[0](function (next){next((" + JSFunc + ")(Array.prototype.slice.call(arguments).slice(1)))});");
 };
+
+macro-proc while(condition, code) local loop () if condition {
+  code;
+  loop();
+};

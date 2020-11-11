@@ -1,3 +1,14 @@
+LINK <"lib:math">;
+LINK <"lib:std">;
+
+print(add(3, 2));
+
+i = 0;
+while(i < 7, {
+  print(i);
+  i += 1;
+});
+
 macro-proc :for(iterator, condition, postaction, code) `{
   local loop(iterator) if condition {
     code
@@ -5,18 +16,7 @@ macro-proc :for(iterator, condition, postaction, code) `{
   };
 }';
 
-for(`i = 0', `i < 7', `i + 1', `{
-  print(i);
-}');
-
 for(`i = 0', `i < 10', `i + 1', `{
-  macro-proc :for(iterator, condition, postaction, code) `{
-    local loop(iterator) if condition {
-      code
-      loop(postaction);
-    };
-  }';
-
   for(`j = 0', `j < 10', `j + 1', `{
     write(i);
     write(", ");

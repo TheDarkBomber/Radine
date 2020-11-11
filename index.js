@@ -302,15 +302,19 @@ if (!config) {
 }
 
 console.log("Generating AST");
-var AST = new RParser.Parser(new RParser.TStream(new RParser.CStream(data))).parseKern();
-AST = RParser.Link(AST);
+var TSL = new RParser.TStream(new RParser.CStream(data));
+var CASTlink = RParser.Link(TSL);
+var ASTParser = new RParser.Parser(new RParser.TStream(new RParser.CStream(data)));
+ASTParser.setContext(CASTlink[0]);
+var AST = ASTParser.parseKern();
+AST.block.unshift(CASTlink[1]);
 // require('fs').writeFileSync("./ast.json", JSON.stringify(AST));
 console.log("Transforming AST");
 var CPS = toCPS(AST, function(x){return x});
 // require('fs').writeFileSync("./cps.json", JSON.stringify(CPS));
 var optC = optimiseAST(CPS)
 console.log("Transpiling to JS");
-var newc = makeJS(optC);
+var newc = makeJS(optC, ASTParser.getContext());
 newc = "Execute(" + newc + ", [function(r){}]);";
 newc = require('./jsf.js').predefine(__dirname + "/" + 'primitives-minified.js', newc);
 require('fs').writeFileSync(!yargs.output ? "./out.js" : "./" + yargs.output + ".js", newc);

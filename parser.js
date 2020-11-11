@@ -298,13 +298,13 @@ class Parser {
         return pthis.parseFunction();
       }
       if(pthis.keyword("RAW")) return pthis.parseRAW();
+      if(pthis.keyword("LINK")) return pthis.link();
       if(pthis.keyword("parallel")) return pthis.parseParallel(true);
       if(pthis.keyword("do")) return pthis.parseParallel();
       if(pthis.keyword("macro-env")) return pthis.parseNEnvMacro();
       if(pthis.keyword("macro-env#ARG")) return pthis.parseEMHyg("a");
       if(pthis.keyword("macro-env#HYG")) return pthis.parseEMHyg("h");
       if(pthis.keyword("macro-proc")) return pthis.parseMacroProc();
-      if(pthis.keyword("LINK")) return pthis.link();
       if(pthis.keyword("macro-env#FUNC")) {
         pthis.skipKeyword("macro-env#FUNC")
         return {
@@ -805,47 +805,98 @@ class Parser {
   link() {
     pthis.skipKeyword("LINK");
     pthis.skipOp("<");
-    if (pthis.input.peek().type != "string") pthis.input.exeunt("LINK only accepts raw strings as input");
-    var ls = pthis.input.next().value;
+    if (pthis.input.peek().type != "string") pthis.input.exeunt("LINK only accepts raw strings as input (Unreachable state; if you see this report bug immediately.)");
+    pthis.input.next();
     pthis.skipOp(">");
-    if (ls.startsWith("lib:")) {
-      ls = ls.replace(/^lib:/, "");
-      ls = `${require('./config.json').library}/${ls}.rdn`;
-    } else if (ls.startsWith("abs:")) {
-      ls = ls.replace(/^abs:/, "");
-      ls = `${ls}.rdn`;
-    } else ls = `./${ls}.rdn`;
-    var x = require('fs').readFileSync(ls).toString();
+    return pthis.False;
+    // Any errors encountered in this function should be reported as a bug immediately.
+  }
+
+  getContext() {
     return {
-      "ΑΑΑ": x,
-      "ΣΣΣ": "ΑΑΑ"
+      EnvMacros: pthis.EnvMacros,
+      ProcMacros: pthis.ProcMacros,
+      TokenProcMacros: pthis.TokenProcMacros,
+      MacroWords: pthis.MacroWords
     };
+  }
+
+  setContext(ctx) {
+    pthis.EnvMacros = ctx.EnvMacros;
+    pthis.ProcMacros = ctx.ProcMacros;
+    pthis.TokenProcMacros = ctx.TokenProcMacros;
+    pthis.MacroWords = ctx.MacroWords;
   }
 }
 
-function Link(exp) {
-  exp = JSON.stringify(exp);
-  var seen = [];
-  while (/.*{"ΑΑΑ":".*","ΣΣΣ":"ΑΑΑ"}.*/.test(exp)) {
-    var ox = exp;
-    exp = exp.split("ΑΑΑ")[1];
-    exp = exp.substring(3, exp.length - 9);
-    exp = exp.replace(/\\r/g, '\r');
-    exp = exp.replace(/\\t/g, '\t');
-    exp = exp.replace(/\\n/g, '\n');
-    exp = exp.replace(/\\(.)/g, '$1');
-    if(!seen.includes(exp)) {
-      seen.push(exp);
-      let cs = new CStream(exp);
-      let ts = new TStream(cs);
-      let ps = new Parser(ts).parseKern();
-      ps = JSON.stringify(ps);
-      ox = ox.replace(/{"ΑΑΑ":".*?(?=","ΣΣΣ":"ΑΑΑ")","ΣΣΣ":"ΑΑΑ"}/, ps);
-    } else ox = ox.replace(/{"ΑΑΑ":".*?(?=","ΣΣΣ":"ΑΑΑ")","ΣΣΣ":"ΑΑΑ"}/, '{}');
-    exp = ox;
+function Link(input) {
+  var exp = {};
+  let list = microParse(input);
+  let seen = list;
+
+  function getLink(g) {
+    g = require('fs').readFileSync(g).toString();
+    let G = microParse(new TStream(new CStream(g)));
+    if (G != []) G.forEach(e => {
+      if (!seen.includes(e)) {
+        seen.push(e);
+        getLink(e);
+      }
+    });
   }
-  return JSON.parse(exp);
+
+  list.forEach(e => {
+    getLink(e);
+  });
+
+  var flatLink = "";
+  seen.forEach(e => {
+    e = require('fs').readFileSync(e).toString();
+    flatLink += `{${e}};\n`;
+  })
+
+  flatLink = `{${flatLink}};`;
+  let parser = new Parser(new TStream(new CStream(flatLink)));
+  exp = parser.parseKern();
+  return [parser.getContext(), exp];
 }
+
+function microParse(input) {
+    var ret = [];
+    while (!input.eof()) {
+      if (input.peek().type === "keyword" && input.peek().value === "LINK")
+        parseLink();
+      else input.next();
+    }
+
+    function exeunt(msg) {
+      console.log("Microparsing Error");
+      console.log(msg);
+      process.exit(6);
+    }
+
+    function parseLink() {
+      input.next();
+      if (input.peek().type !== "operator" && input.peek().value !== "<")
+        exeunt("Expected '<'");
+      else input.next();
+      if (input.peek().type != "string") exeunt("LINK only accepts raw strings as input");
+      var ls = input.next().value;
+      if (input.peek().type !== "operator" && input.peek().value !== ">")
+        exeunt("Expected '>'");
+      else input.next();
+      if (ls.startsWith("lib:")) {
+        ls = ls.replace(/^lib:/, "");
+        ls = `${require('./config.json').library}/${ls}.rdn`;
+      } else if (ls.startsWith("abs:")) {
+        ls = ls.replace(/^abs:/, "");
+        ls = `${ls}.rdn`;
+      } else ls = `./${ls}.rdn`;
+      if (!ret.includes(ls)) ret.push(ls);
+    }
+
+    return ret;
+  }
 
 module.exports = {
   CStream: CStream,

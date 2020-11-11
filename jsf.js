@@ -240,10 +240,11 @@ const TStream = require('./parser.js').TStream;
 
 // Input: Radine AST
 // Output: Raw JS
-function makeJS(exp) {
+function makeJS(exp, ctx) {
   var macros = {};
   var macroVars = {};
   var isTokenMacro = {};
+  var flatMacros = [];
   return (new Function("π_KERNEL", JS(exp))).toString();
 
   function JS(exp) {
@@ -442,6 +443,7 @@ function makeJS(exp) {
     macros[exp.name] = AST;
     macroVars[exp.name] = exp.vars;
     isTokenMacro[exp.name] = exp.token;
+    flatMacros.unshift(exp);
     return JS(False);
   }
 
@@ -468,7 +470,12 @@ function makeJS(exp) {
         else _ast.push(e);
       })
       AST = _ast;
-      AST = new Parser(new TStream(AST)).parseKern();
+      AST = new Parser(new TStream(AST));
+      AST.setContext(ctx);
+      AST = AST.parseKern();
+      flatMacros.forEach(e => {
+        AST.block.unshift(e);
+      });
     }
     let code = optimiseAST(toCPS(AST, function(x){return x;}));
     return JS(code);
