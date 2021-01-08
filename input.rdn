@@ -1,25 +1,6 @@
-LINK <"lib:math">;
-LINK <"lib:std">;
-
-print(add(3, 2));
-
-i = 0;
-while(i < 7, {
-  print(i);
-  i += 1;
-});
-
-macro-proc :for(iterator, condition, postaction, code) `{
-  local loop(iterator) if condition {
-    code
-    loop(postaction);
-  };
-}';
-
-for(`i = 0', `i < 10', `i + 1', `{
-  for(`j = 0', `j < 10', `j + 1', `{
-    write(i);
-    write(", ");
-    print(j);
-  }');
-}');
+print(« Hey there, Galaxy! »);
+print(« "Quotations, without escaping." »);
+print("\"Quotations, with escaping.\"");
+print(« « Guillemets, with escaping. \» »);
+print("« Guillemets, without escaping. »");
+print(« Bonus: « Guillemets, but with regular spaces, which aren't actually correct and therefore there is no need to escape this closing guillemet. » »);

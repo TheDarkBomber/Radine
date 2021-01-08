@@ -56,6 +56,7 @@ class TStream {
       return tthis.readNext();
     }
     if(ch == '"') return tthis.readStr();
+    if(ch == '«' && tthis.input.peekNext() == ' ') return tthis.readGuillements();
     if(ch == "|" && tthis.input.peekNext() !== "|") return tthis.readRegex();
     if(tthis.digit(ch)) return tthis.readNum();
     if(tthis.pIdent(ch)) return tthis.readIdent();
@@ -161,6 +162,34 @@ class TStream {
       type: "string",
       value: tthis.readSKP('"')
     };
+  }
+
+  readGuillements() {
+    return {
+      type: "string",
+      value: tthis.readGME('»')
+    };
+  }
+
+  readGME(end) {
+    var NBSP = false;
+    var s = "";
+    tthis.input.next();
+    this.input.next();
+    while(!tthis.input.eof()) {
+      var ch = tthis.input.next();
+      if (NBSP) {
+        NBSP = false;
+        if (ch == end) break;
+        else if (ch == '\\') s += ' ' + tthis.input.next();
+        else s += ' ' + ch;
+      } else if (ch == ' ') {
+        NBSP = true;
+      } else {
+        s += ch;
+      }
+    }
+    return s;
   }
 
   readRegex() {
