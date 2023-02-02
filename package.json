@@ -7,7 +7,7 @@
     "example": "examples"
   },
   "dependencies": {
-    "nexe": "^3.3.2",
+    "nexe": "^4.0.0-rc.2",
     "yargs": "^15.1.0"
   },
   "devDependencies": {},
